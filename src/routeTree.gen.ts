@@ -18,11 +18,18 @@ import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedGenerateRouteImport } from './routes/_authenticated/generate'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSubscriptionRouteImport } from './routes/_authenticated/subscription'
 import { Route as PayIndexRouteImport } from './routes/pay.index'
 import { Route as PayOrderIdRouteImport } from './routes/pay.$orderId'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin/settings'
+import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_authenticated/admin/subscriptions'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users.index'
+import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin/users.$id'
 import { Route as ApiPublicPayOrderIdRouteImport } from './routes/api/public/pay.$orderId'
 import { Route as ApiPublicPaymentsPollRouteImport } from './routes/api/public/payments/poll'
+import { Route as ApiPublicSubscriptionWebhookRouteImport } from './routes/api/public/subscription/webhook'
 import { Route as ApiPublicV1OrdersRouteImport } from './routes/api/public/v1/orders'
 import { Route as ApiPublicV1InternalDispatchWebhooksRouteImport } from './routes/api/public/v1/internal/dispatch-webhooks'
 import { Route as ApiPublicV1OrdersIdRouteImport } from './routes/api/public/v1/orders.$id'
@@ -71,6 +78,12 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSubscriptionRoute =
+  AuthenticatedSubscriptionRouteImport.update({
+    id: '/subscription',
+    path: '/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const PayIndexRoute = PayIndexRouteImport.update({
   id: '/pay/',
   path: '/pay/',
@@ -81,11 +94,40 @@ const PayOrderIdRoute = PayOrderIdRouteImport.update({
   path: '/pay/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/admin/settings',
+    path: '/admin/settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSubscriptionsRoute =
+  AuthenticatedAdminSubscriptionsRouteImport.update({
+    id: '/admin/subscriptions',
+    path: '/admin/subscriptions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   id: '/api/public/health',
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/admin/users/',
+    path: '/admin/users/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersIdRoute =
+  AuthenticatedAdminUsersIdRouteImport.update({
+    id: '/admin/users/$id',
+    path: '/admin/users/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPayOrderIdRoute = ApiPublicPayOrderIdRouteImport.update({
   id: '/api/public/pay/$orderId',
   path: '/api/public/pay/$orderId',
@@ -96,6 +138,12 @@ const ApiPublicPaymentsPollRoute = ApiPublicPaymentsPollRouteImport.update({
   path: '/api/public/payments/poll',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSubscriptionWebhookRoute =
+  ApiPublicSubscriptionWebhookRouteImport.update({
+    id: '/api/public/subscription/webhook',
+    path: '/api/public/subscription/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1OrdersRoute = ApiPublicV1OrdersRouteImport.update({
   id: '/api/public/v1/orders',
   path: '/api/public/v1/orders',
@@ -122,12 +170,19 @@ export interface FileRoutesByFullPath {
   '/generate': typeof AuthenticatedGenerateRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/pay/$orderId': typeof PayOrderIdRoute
   '/pay/': typeof PayIndexRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
+  '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/public/v1/internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
   '/api/public/v1/orders/$id': typeof ApiPublicV1OrdersIdRoute
 }
@@ -140,12 +195,19 @@ export interface FileRoutesByTo {
   '/generate': typeof AuthenticatedGenerateRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/subscription': typeof AuthenticatedSubscriptionRoute
   '/pay/$orderId': typeof PayOrderIdRoute
   '/pay': typeof PayIndexRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
+  '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/api/public/v1/internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
   '/api/public/v1/orders/$id': typeof ApiPublicV1OrdersIdRoute
 }
@@ -160,12 +222,19 @@ export interface FileRoutesById {
   '/_authenticated/generate': typeof AuthenticatedGenerateRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/subscription': typeof AuthenticatedSubscriptionRoute
   '/pay/$orderId': typeof PayOrderIdRoute
   '/pay/': typeof PayIndexRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
+  '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/api/public/v1/internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
   '/api/public/v1/orders/$id': typeof ApiPublicV1OrdersIdRoute
 }
@@ -180,12 +249,19 @@ export interface FileRouteTypes {
     | '/generate'
     | '/history'
     | '/settings'
+    | '/subscription'
     | '/pay/$orderId'
     | '/pay/'
+    | '/admin/settings'
+    | '/admin/subscriptions'
     | '/api/public/health'
+    | '/admin/'
+    | '/admin/users/$id'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
+    | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
+    | '/admin/users/'
     | '/api/public/v1/internal/dispatch-webhooks'
     | '/api/public/v1/orders/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -198,12 +274,19 @@ export interface FileRouteTypes {
     | '/generate'
     | '/history'
     | '/settings'
+    | '/subscription'
     | '/pay/$orderId'
     | '/pay'
+    | '/admin/settings'
+    | '/admin/subscriptions'
     | '/api/public/health'
+    | '/admin'
+    | '/admin/users/$id'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
+    | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
+    | '/admin/users'
     | '/api/public/v1/internal/dispatch-webhooks'
     | '/api/public/v1/orders/$id'
   id:
@@ -217,12 +300,19 @@ export interface FileRouteTypes {
     | '/_authenticated/generate'
     | '/_authenticated/history'
     | '/_authenticated/settings'
+    | '/_authenticated/subscription'
     | '/pay/$orderId'
     | '/pay/'
+    | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/subscriptions'
     | '/api/public/health'
+    | '/_authenticated/admin/'
+    | '/_authenticated/admin/users/$id'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
+    | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
+    | '/_authenticated/admin/users/'
     | '/api/public/v1/internal/dispatch-webhooks'
     | '/api/public/v1/orders/$id'
   fileRoutesById: FileRoutesById
@@ -238,6 +328,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPayOrderIdRoute: typeof ApiPublicPayOrderIdRoute
   ApiPublicPaymentsPollRoute: typeof ApiPublicPaymentsPollRoute
+  ApiPublicSubscriptionWebhookRoute: typeof ApiPublicSubscriptionWebhookRoute
   ApiPublicV1OrdersRoute: typeof ApiPublicV1OrdersRouteWithChildren
   ApiPublicV1InternalDispatchWebhooksRoute: typeof ApiPublicV1InternalDispatchWebhooksRoute
 }
@@ -307,6 +398,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/subscription': {
+      id: '/_authenticated/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof AuthenticatedSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/pay/': {
       id: '/pay/'
       path: '/pay'
@@ -321,12 +419,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/subscriptions': {
+      id: '/_authenticated/admin/subscriptions'
+      path: '/admin/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AuthenticatedAdminSubscriptionsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/health': {
       id: '/api/public/health'
       path: '/api/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/users/': {
+      id: '/_authenticated/admin/users/'
+      path: '/admin/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/users/$id': {
+      id: '/_authenticated/admin/users/$id'
+      path: '/admin/users/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/pay/$orderId': {
       id: '/api/public/pay/$orderId'
@@ -340,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payments/poll'
       fullPath: '/api/public/payments/poll'
       preLoaderRoute: typeof ApiPublicPaymentsPollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/subscription/webhook': {
+      id: '/api/public/subscription/webhook'
+      path: '/api/public/subscription/webhook'
+      fullPath: '/api/public/subscription/webhook'
+      preLoaderRoute: typeof ApiPublicSubscriptionWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/orders': {
@@ -371,6 +511,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGenerateRoute: typeof AuthenticatedGenerateRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSubscriptionRoute: typeof AuthenticatedSubscriptionRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminSubscriptionsRoute: typeof AuthenticatedAdminSubscriptionsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminUsersIdRoute: typeof AuthenticatedAdminUsersIdRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -378,6 +524,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGenerateRoute: AuthenticatedGenerateRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSubscriptionRoute: AuthenticatedSubscriptionRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminSubscriptionsRoute: AuthenticatedAdminSubscriptionsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminUsersIdRoute: AuthenticatedAdminUsersIdRoute,
+  AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -405,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPayOrderIdRoute: ApiPublicPayOrderIdRoute,
   ApiPublicPaymentsPollRoute: ApiPublicPaymentsPollRoute,
+  ApiPublicSubscriptionWebhookRoute: ApiPublicSubscriptionWebhookRoute,
   ApiPublicV1OrdersRoute: ApiPublicV1OrdersRouteWithChildren,
   ApiPublicV1InternalDispatchWebhooksRoute:
     ApiPublicV1InternalDispatchWebhooksRoute,

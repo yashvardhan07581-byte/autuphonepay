@@ -4,10 +4,11 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
   SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
-import { QrCode, KeyRound, Settings, FileText, LogOut, History } from "lucide-react";
-import { toast } from "sonner";
+import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard } from "lucide-react";
 import { swalSuccess } from "@/lib/swal";
 import logoUrl from "@/assets/panme-logo.jpg";
+import { AdminSidebarSection } from "@/components/admin/AdminSidebar";
+import { useState, useEffect } from "react";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -16,10 +17,6 @@ export const Route = createFileRoute("/_authenticated")({
       const { data, error } = await supabase.auth.getUser();
       if (error || !data.user) throw redirect({ to: "/auth" });
       return { user: data.user };
-
-
-
-
     } catch (e) {
       if (e && typeof e === "object" && "to" in (e as any)) throw e;
       throw redirect({ to: "/auth" });
@@ -29,11 +26,40 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const items = [
-   { title: "Generate QR", url: "/generate", icon: QrCode },
-   { title: "History", url: "/history", icon: History },
-   { title: "API Keys", url: "/api-keys", icon: KeyRound },
-   { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Generate QR", url: "/generate", icon: QrCode },
+  { title: "History", url: "/history", icon: History },
+  { title: "Subscription", url: "/subscription", icon: CreditCard },
+  { title: "API Keys", url: "/api-keys", icon: KeyRound },
+  { title: "Settings", url: "/settings", icon: Settings },
 ];
+
+function AdminSidebarGroup() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          setIsAdmin(data?.role === "admin");
+        });
+    });
+  }, []);
+
+  if (!isAdmin) return null;
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <AdminSidebarSection />
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
 function AppSidebar() {
   const navigate = useNavigate();
@@ -78,52 +104,51 @@ function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
-                       asChild
-                       tooltip={item.title}
-                       className={`group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1 hover:shadow-md ${active ? "bg-white/20 shadow-inner" : ""}`}
+                      asChild
+                      tooltip={item.title}
+                      className={`group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1 hover:shadow-md ${active ? "bg-white/20 shadow-inner" : ""}`}
                     >
-                       <Link to={item.url}>
-                         <item.icon className={`w-4 h-4 transition-transform duration-300 group-hover/btn:scale-110 ${active ? "text-white" : "text-white/80"}`} />
-                         <span className="font-medium flex-1">{item.title}</span>
-                       </Link>
+                      <Link to={item.url}>
+                        <item.icon className={`w-4 h-4 transition-transform duration-300 group-hover/btn:scale-110 ${active ? "text-white" : "text-white/80"}`} />
+                        <span className="font-medium flex-1">{item.title}</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
 
-               <SidebarMenuItem>
-                 <SidebarMenuButton
-                   asChild
-                   tooltip="Docs"
-                   className="group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1"
-                 >
-                   <a href="/docs" target="_blank" rel="noopener">
-                     <FileText className="w-4 h-4 text-white/80 transition-transform duration-300 group-hover/btn:scale-110" />
-                     <span className="font-medium">Docs</span>
-                   </a>
-                 </SidebarMenuButton>
-               </SidebarMenuItem>
-             </SidebarMenu>
-           </SidebarGroupContent>
-         </SidebarGroup>
-       </SidebarContent>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Docs"
+                  className="group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1"
+                >
+                  <a href="/docs" target="_blank" rel="noopener">
+                    <FileText className="w-4 h-4 text-white/80 transition-transform duration-300 group-hover/btn:scale-110" />
+                    <span className="font-medium">Docs</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-       <SidebarFooter className="p-2 border-t border-white/10">
-         <SidebarMenu>
-           <SidebarMenuItem>
-             <SidebarMenuButton onClick={logout} tooltip="Sign out" className="h-10 rounded-lg hover:bg-red-500/30 transition-all duration-300">
+        <AdminSidebarGroup />
 
+      </SidebarContent>
 
-
-
-                <LogOut className="w-4 h-4" />
-                <span>Sign out</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-    );
+      <SidebarFooter className="p-2 border-t border-white/10">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={logout} tooltip="Sign out" className="h-10 rounded-lg hover:bg-red-500/30 transition-all duration-300">
+              <LogOut className="w-4 h-4" />
+              <span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  );
 }
 
 function AuthedLayout() {
@@ -133,10 +158,10 @@ function AuthedLayout() {
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <header className="h-14 flex items-center px-4 border-b border-black/5 bg-white/60 backdrop-blur-sm">
-             <SidebarTrigger className="text-[#0d4a3a]" />
+            <SidebarTrigger className="text-[#0d4a3a]" />
           </header>
           <main className="flex-1 p-6 md:p-10">
-             <Outlet />
+            <Outlet />
           </main>
         </div>
       </div>
