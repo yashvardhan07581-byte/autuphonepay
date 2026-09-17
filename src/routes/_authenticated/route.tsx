@@ -4,7 +4,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
   SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
-import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard } from "lucide-react";
+import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard ,Home} from "lucide-react";
 import { swalSuccess } from "@/lib/swal";
 import logoUrl from "@/assets/panme-logo.jpg";
 import { AdminSidebarSection } from "@/components/admin/AdminSidebar";
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const items = [
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Generate QR", url: "/generate", icon: QrCode },
   { title: "History", url: "/history", icon: History },
   { title: "Subscription", url: "/subscription", icon: CreditCard },

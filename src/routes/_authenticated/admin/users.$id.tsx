@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { swalSuccess } from "@/lib/swal";
 import Swal from "sweetalert2";
 import {
-  ArrowLeft, Mail, User as UserIcon, CreditCard, ShieldCheck, ShieldAlert,
-  Calendar, Loader2, CheckCircle2, XCircle, Trash2, KeyRound, Save,
+  ArrowLeft, User as UserIcon, CreditCard, Loader2, CheckCircle2, XCircle,
+  Trash2, KeyRound, Save, ShoppingCart, DollarSign, TrendingUp, History,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/users/$id")({
@@ -39,14 +39,34 @@ type UserDetail = {
   created_at: string;
 };
 
+type OrderRow = {
+  order_id: string;
+  merchant_order_id: string | null;
+  payable_amount: number;
+  status: string;
+  created_at: string;
+  paid_at: string | null;
+};
+
+type SubRow = {
+  id: string;
+  plan: string;
+  amount: number;
+  payment_status: string;
+  started_at: string | null;
+  expires_at: string | null;
+  created_at: string;
+};
+
 function UserDetailPage() {
   const { id } = useParams({ from: "/_authenticated/admin/users/$id" });
   const [user, setUser] = useState<UserDetail | null>(null);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [subs, setSubs] = useState<SubRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
 
-  // Editable fields
   const [role, setRole] = useState<string>("user");
   const [isVerified, setIsVerified] = useState(false);
   const [plan, setPlan] = useState<string>("");
@@ -60,15 +80,16 @@ function UserDetailPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", id)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    if (error) {
-      toast.error(error.message);
-    } else if (data) {
+      if (error) throw error;
+      if (!data) return;
+
       setUser(data as UserDetail);
       setRole(data.role);
       setIsVerified(data.is_verified);
@@ -78,8 +99,37 @@ function UserDetailPage() {
           ? new Date(data.subscription_expires_at).toISOString().slice(0, 10)
           : ""
       );
+
+      // Merchant ID
+      const { data: merchant } = await supabase
+        .from("merchants")
+        .select("id")
+        .eq("owner_id", id)
+        .maybeSingle();
+
+      // Orders
+      if (merchant) {
+        const { data: o } = await supabase
+          .from("orders")
+          .select("order_id, merchant_order_id, payable_amount, status, created_at, paid_at")
+          .eq("merchant_id", merchant.id)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        setOrders(o ?? []);
+      }
+
+      // Subscriptions
+      const { data: s } = await supabase
+        .from("subscriptions")
+        .select("id, plan, amount, payment_status, started_at, expires_at, created_at")
+        .eq("user_id", id)
+        .order("created_at", { ascending: false });
+      setSubs(s ?? []);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function saveChanges() {
@@ -104,11 +154,7 @@ function UserDetailPage() {
         updatePayload.subscription_started_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from("profiles")
-        .update(updatePayload)
-        .eq("id", id);
-
+      const { error } = await supabase.from("profiles").update(updatePayload).eq("id", id);
       if (error) throw error;
 
       const { data: { user: me } } = await supabase.auth.getUser();
@@ -202,8 +248,15 @@ function UserDetailPage() {
     );
   }
 
+  // Stats
+  const paidOrders = orders.filter((o) => o.status === "paid");
+  const totalRevenue = paidOrders.reduce((s, o) => s + Number(o.payable_amount), 0);
+  const totalSubsSpent = subs
+    .filter((s) => s.payment_status === "paid")
+    .reduce((sum, s) => sum + Number(s.amount), 0);
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6">
         <Link
@@ -225,6 +278,28 @@ function UserDetailPage() {
         </div>
       </div>
 
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <StatBox
+          title="Total Orders"
+          value={orders.length}
+          icon={ShoppingCart}
+          color="blue"
+        />
+        <StatCard
+          title="Order Revenue"
+          value={`₹${totalRevenue.toLocaleString("en-IN")}`}
+          icon={DollarSign}
+          color="emerald"
+        />
+        <StatCard
+          title="Subscriptions Spent"
+          value={`₹${totalSubsSpent.toLocaleString("en-IN")}`}
+          icon={TrendingUp}
+          color="purple"
+        />
+      </div>
+
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <InfoCard title="Basic Info" icon={UserIcon}>
@@ -235,7 +310,9 @@ function UserDetailPage() {
           <Row
             label="Joined"
             value={new Date(user.created_at).toLocaleDateString("en-IN", {
-              day: "numeric", month: "long", year: "numeric",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
             })}
           />
         </InfoCard>
@@ -257,15 +334,109 @@ function UserDetailPage() {
         </InfoCard>
       </div>
 
-      {/* Admin Actions */}
+      {/* Recent Orders */}
+      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8">
+        <h2 className="text-xl font-bold text-[#0d1b2a] mb-6 flex items-center gap-2">
+          <ShoppingCart className="w-5 h-5 text-[#0d4a3a]" /> Recent Orders
+        </h2>
+        {orders.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            No orders yet
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-gray-100">
+                <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="pb-3">Order ID</th>
+                  <th className="pb-3">Amount</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {orders.map((o) => (
+                  <tr key={o.order_id} className="text-sm">
+                    <td className="py-3 font-mono text-xs text-gray-600">
+                      {o.merchant_order_id || o.order_id}
+                    </td>
+                    <td className="py-3 font-semibold text-[#0d1b2a]">
+                      ₹{Number(o.payable_amount).toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge status={o.status} />
+                    </td>
+                    <td className="py-3 text-xs text-gray-500">
+                      {new Date(o.created_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Subscription History */}
+      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8">
+        <h2 className="text-xl font-bold text-[#0d1b2a] mb-6 flex items-center gap-2">
+          <History className="w-5 h-5 text-[#0d4a3a]" /> Subscription History
+        </h2>
+        {subs.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 text-sm">
+            No subscriptions yet
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b border-gray-100">
+                <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="pb-3">Plan</th>
+                  <th className="pb-3">Amount</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3">Started</th>
+                  <th className="pb-3">Expires</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {subs.map((s) => (
+                  <tr key={s.id} className="text-sm">
+                    <td className="py-3">
+                      <PlanBadge plan={s.plan} />
+                    </td>
+                    <td className="py-3 font-semibold text-[#0d1b2a]">
+                      ₹{Number(s.amount).toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-3">
+                      <StatusBadge status={s.payment_status} />
+                    </td>
+                    <td className="py-3 text-xs text-gray-500">
+                      {s.started_at
+                        ? new Date(s.started_at).toLocaleDateString("en-IN")
+                        : "—"}
+                    </td>
+                    <td className="py-3 text-xs text-gray-500">
+                      {s.expires_at
+                        ? new Date(s.expires_at).toLocaleDateString("en-IN")
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Admin Controls */}
       <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8 space-y-6">
         <h2 className="text-xl font-bold text-[#0d1b2a]">Admin Controls</h2>
 
-        {/* Role */}
         <div>
-          <label className="block text-sm font-semibold text-[#0d1b2a] mb-1.5">
-            Role
-          </label>
+          <label className="block text-sm font-semibold text-[#0d1b2a] mb-1.5">Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -276,7 +447,6 @@ function UserDetailPage() {
           </select>
         </div>
 
-        {/* Verified */}
         <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3">
             {isVerified ? (
@@ -298,11 +468,10 @@ function UserDetailPage() {
               onChange={(e) => setIsVerified(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0d4a3a]"></div>
+            <div className="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0d4a3a]"></div>
           </label>
         </div>
 
-        {/* Subscription Plan */}
         <div>
           <label className="block text-sm font-semibold text-[#0d1b2a] mb-1.5">
             Subscription Plan
@@ -319,7 +488,6 @@ function UserDetailPage() {
           </select>
         </div>
 
-        {/* Expiry */}
         <div>
           <label className="block text-sm font-semibold text-[#0d1b2a] mb-1.5">
             Expiry Date (optional — auto-calculated if blank)
@@ -332,7 +500,6 @@ function UserDetailPage() {
           />
         </div>
 
-        {/* Save */}
         <button
           onClick={saveChanges}
           disabled={saving}
@@ -342,7 +509,6 @@ function UserDetailPage() {
           {saving ? "Saving..." : "SAVE CHANGES"}
         </button>
 
-        {/* Password Reset */}
         <div className="pt-6 border-t border-gray-200">
           <h3 className="text-sm font-bold text-[#0d1b2a] mb-3">Account Security</h3>
           <button
@@ -358,7 +524,6 @@ function UserDetailPage() {
           </p>
         </div>
 
-        {/* Danger Zone */}
         <div className="pt-6 border-t border-gray-200">
           <h3 className="text-sm font-bold text-red-600 mb-3">Danger Zone</h3>
           <button
@@ -373,15 +538,27 @@ function UserDetailPage() {
   );
 }
 
-function InfoCard({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: any;
-  children: React.ReactNode;
-}) {
+// Helper components
+function StatBox({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: any; color: "blue" | "emerald" | "purple" }) {
+  const colors = {
+    blue: "from-blue-500 to-blue-600",
+    emerald: "from-emerald-500 to-emerald-600",
+    purple: "from-purple-500 to-purple-600",
+  };
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-6">
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md mb-4`}>
+        <Icon className="w-6 h-6 text-white" />
+      </div>
+      <div className="text-2xl font-bold text-[#0d1b2a]">{value}</div>
+      <div className="text-sm text-gray-500 mt-1">{title}</div>
+    </div>
+  );
+}
+
+const StatCard = StatBox;
+
+function InfoCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -403,5 +580,33 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
         {value}
       </span>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const colors: any = {
+    paid: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    expired: "bg-gray-100 text-gray-700 border-gray-200",
+    failed: "bg-red-100 text-red-800 border-red-200",
+    cancelled: "bg-gray-100 text-gray-700 border-gray-200",
+  };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colors[status] ?? colors.pending}`}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+function PlanBadge({ plan }: { plan: string }) {
+  const colors: any = {
+    basic: "bg-blue-100 text-blue-800 border-blue-200",
+    pro: "bg-purple-100 text-purple-800 border-purple-200",
+    yearly: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colors[plan] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+      {plan.toUpperCase()}
+    </span>
   );
 }

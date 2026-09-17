@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import {
   createSubscriptionOrder,
   checkSubscriptionOrderStatus,
+  syncMyPendingOrders,
 } from "@/lib/subscription.functions";
 import { toast } from "sonner";
 import { swalSuccess } from "@/lib/swal";
@@ -98,6 +98,7 @@ function SubscriptionPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [activeOrder, setActiveOrder] = useState<{ order: OrderData; plan: Plan } | null>(null);
 
   useEffect(() => {
@@ -120,15 +121,32 @@ function SubscriptionPage() {
   async function buyPlan(plan: Plan) {
     setBuying(plan.id);
     try {
-      const createOrder = createSubscriptionOrder; // server fn
-      const order = await (createOrder as any)({
-        data: { plan: plan.id },
-      });
-      setActiveOrder({ order, plan });
+      const order = await createSubscriptionOrder({ data: { plan: plan.id } });
+      setActiveOrder({ order: order as OrderData, plan });
     } catch (e: any) {
       toast.error(e.message ?? "Failed to create order");
     } finally {
       setBuying(null);
+    }
+  }
+
+  async function syncPending() {
+    setSyncing(true);
+    try {
+      const result = await syncMyPendingOrders();
+      const r = result as { checked: number; activated: number };
+      if (r.activated > 0) {
+        swalSuccess(`${r.activated} subscription(s) activated!`);
+        load();
+      } else if (r.checked > 0) {
+        toast.info(`${r.checked} pending order(s) checked, none paid yet`);
+      } else {
+        toast.info("No pending orders");
+      }
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -150,7 +168,7 @@ function SubscriptionPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6 flex items-center justify-between">
+      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
             <CreditCard className="w-6 h-6 text-white" />
@@ -162,6 +180,14 @@ function SubscriptionPage() {
             </p>
           </div>
         </div>
+        <button
+          onClick={syncPending}
+          disabled={syncing}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition backdrop-blur-sm disabled:opacity-60"
+        >
+          <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Checking..." : "Verify Pending"}
+        </button>
       </div>
 
       {/* Current status */}
@@ -375,7 +401,6 @@ function PlanCard({
   );
 }
 
-// ============ PAYMENT MODAL ============
 function PaymentModal({
   order,
   plan,
@@ -397,15 +422,14 @@ function PaymentModal({
     );
     return Math.max(0, diff);
   });
-
   const [copied, setCopied] = useState(false);
+
   const intervalRef = useRef<number | null>(null);
   const expiryRef = useRef<number | null>(null);
   const paidHandled = useRef(false);
 
-  const MAX_POLLS = 100; // 5 min at 3s interval
+  const MAX_POLLS = 100;
 
-  // Expiry countdown
   useEffect(() => {
     expiryRef.current = window.setInterval(() => {
       setExpirySeconds((s) => Math.max(0, s - 1));
@@ -415,18 +439,15 @@ function PaymentModal({
     };
   }, []);
 
-  // Polling
   useEffect(() => {
     if (!polling) return;
 
     async function poll() {
       try {
-        const check = checkSubscriptionOrderStatus;
-        const result: any = await (check as any)({
+        const result = await checkSubscriptionOrderStatus({
           data: { order_id: order.order_id },
         });
-
-        const st = result?.status ?? "pending";
+        const st = (result as any)?.status ?? "pending";
 
         if (st === "paid") {
           if (paidHandled.current) return;
@@ -434,7 +455,6 @@ function PaymentModal({
           setStatus("paid");
           setPolling(false);
           swalSuccess("Payment received! Subscription activated.");
-          // Give DB a moment to update (webhook may lag), then refresh
           setTimeout(() => onSuccess(), 1500);
         } else if (st === "expired") {
           setStatus("expired");
@@ -445,12 +465,11 @@ function PaymentModal({
         } else {
           setPollCount((c) => c + 1);
         }
-      } catch (e) {
-        // Transient error — keep polling
+      } catch {
+        // keep polling on transient errors
       }
     }
 
-    // Poll immediately, then every 3s
     poll();
     intervalRef.current = window.setInterval(poll, 3000);
 
@@ -459,21 +478,17 @@ function PaymentModal({
     };
   }, [polling, order.order_id]);
 
-  // Stop polling after MAX_POLLS
   useEffect(() => {
-    if (pollCount >= MAX_POLLS && polling) {
-      setPolling(false);
-    }
+    if (pollCount >= MAX_POLLS && polling) setPolling(false);
   }, [pollCount, polling]);
 
   async function manualCheck() {
     setChecking(true);
     try {
-      const check = checkSubscriptionOrderStatus;
-      const result: any = await (check as any)({
+      const result = await checkSubscriptionOrderStatus({
         data: { order_id: order.order_id },
       });
-      const st = result?.status ?? "pending";
+      const st = (result as any)?.status ?? "pending";
       if (st === "paid") {
         if (paidHandled.current) return;
         paidHandled.current = true;
@@ -517,21 +532,16 @@ function PaymentModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* Success view */}
         {status === "paid" ? (
           <div className="p-8 text-center">
             <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <Check className="w-10 h-10 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-bold text-[#0d1b2a] mb-2">
-              Payment Successful!
-            </h2>
+            <h2 className="text-2xl font-bold text-[#0d1b2a] mb-2">Payment Successful!</h2>
             <p className="text-sm text-gray-600 mb-1">
               Your <strong>{plan.name}</strong> plan is now active
             </p>
-            <p className="text-xs text-gray-500">
-              Activated for {plan.days} days
-            </p>
+            <p className="text-xs text-gray-500">Activated for {plan.days} days</p>
             <div className="mt-6">
               <Loader2 className="w-5 h-5 animate-spin text-[#0d4a3a] mx-auto" />
               <p className="text-xs text-gray-500 mt-2">Refreshing...</p>
@@ -571,17 +581,13 @@ function PaymentModal({
           </div>
         ) : (
           <div className="p-6">
-            {/* Header */}
             <div className="text-center mb-5">
-              <h2 className="text-xl font-bold text-[#0d1b2a]">
-                Scan to Pay
-              </h2>
+              <h2 className="text-xl font-bold text-[#0d1b2a]">Scan to Pay</h2>
               <p className="text-sm text-gray-500 mt-1">
                 {plan.name} Plan · ₹{plan.price}
               </p>
             </div>
 
-            {/* Amount */}
             <div className="bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] rounded-xl p-4 text-center mb-5">
               <div className="text-xs text-emerald-100/80">Amount to pay</div>
               <div className="text-3xl font-extrabold text-white mt-1">
@@ -589,7 +595,6 @@ function PaymentModal({
               </div>
             </div>
 
-            {/* QR */}
             {order.qr_base64 ? (
               <div className="flex justify-center mb-4">
                 <div className="bg-white p-3 rounded-xl border-2 border-gray-100 shadow-md">
@@ -612,7 +617,6 @@ function PaymentModal({
               Scan with any UPI app (PhonePe, GPay, Paytm)
             </p>
 
-            {/* UPI Link */}
             <button
               onClick={copyUpiLink}
               className="w-full mb-3 px-4 py-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm font-medium text-gray-700 flex items-center justify-center gap-2 transition"
@@ -628,7 +632,6 @@ function PaymentModal({
               )}
             </button>
 
-            {/* Open in UPI app */}
             <a
               href={order.upi_uri}
               className="w-full mb-5 px-4 py-3 rounded-lg bg-[#0d4a3a] text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#0a3d30] transition"
@@ -636,7 +639,6 @@ function PaymentModal({
               <ExternalLink className="w-4 h-4" /> Open in UPI App
             </a>
 
-            {/* Status + Timer */}
             <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-[#0d4a3a]" />
@@ -655,7 +657,6 @@ function PaymentModal({
               </p>
             )}
 
-            {/* Manual check */}
             <button
               onClick={manualCheck}
               disabled={checking}

@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGenerateRouteImport } from './routes/_authenticated/generate'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_a
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users.index'
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin/users.$id'
+import { Route as ApiPublicCronSendRemindersRouteImport } from './routes/api/public/cron/send-reminders'
 import { Route as ApiPublicPayOrderIdRouteImport } from './routes/api/public/pay.$orderId'
 import { Route as ApiPublicPaymentsPollRouteImport } from './routes/api/public/payments/poll'
 import { Route as ApiPublicSubscriptionWebhookRouteImport } from './routes/api/public/subscription/webhook'
@@ -61,6 +63,11 @@ const SignupRoute = SignupRouteImport.update({
 const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
   id: '/api-keys',
   path: '/api-keys',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGenerateRoute = AuthenticatedGenerateRouteImport.update({
@@ -128,6 +135,12 @@ const AuthenticatedAdminUsersIdRoute =
     path: '/admin/users/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicCronSendRemindersRoute =
+  ApiPublicCronSendRemindersRouteImport.update({
+    id: '/api/public/cron/send-reminders',
+    path: '/api/public/cron/send-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPayOrderIdRoute = ApiPublicPayOrderIdRouteImport.update({
   id: '/api/public/pay/$orderId',
   path: '/api/public/pay/$orderId',
@@ -167,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRoute
   '/signup': typeof SignupRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/generate': typeof AuthenticatedGenerateRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -178,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
@@ -192,6 +207,7 @@ export interface FileRoutesByTo {
   '/docs': typeof DocsRoute
   '/signup': typeof SignupRoute
   '/api-keys': typeof AuthenticatedApiKeysRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/generate': typeof AuthenticatedGenerateRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -203,6 +219,7 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
@@ -219,6 +236,7 @@ export interface FileRoutesById {
   '/docs': typeof DocsRoute
   '/signup': typeof SignupRoute
   '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/generate': typeof AuthenticatedGenerateRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -230,6 +248,7 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
+  '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
@@ -246,6 +265,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/signup'
     | '/api-keys'
+    | '/dashboard'
     | '/generate'
     | '/history'
     | '/settings'
@@ -257,6 +277,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/admin/'
     | '/admin/users/$id'
+    | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
@@ -271,6 +292,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/signup'
     | '/api-keys'
+    | '/dashboard'
     | '/generate'
     | '/history'
     | '/settings'
@@ -282,6 +304,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/admin'
     | '/admin/users/$id'
+    | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
@@ -297,6 +320,7 @@ export interface FileRouteTypes {
     | '/docs'
     | '/signup'
     | '/_authenticated/api-keys'
+    | '/_authenticated/dashboard'
     | '/_authenticated/generate'
     | '/_authenticated/history'
     | '/_authenticated/settings'
@@ -308,6 +332,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/users/$id'
+    | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
@@ -326,6 +351,7 @@ export interface RootRouteChildren {
   PayOrderIdRoute: typeof PayOrderIdRoute
   PayIndexRoute: typeof PayIndexRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicCronSendRemindersRoute: typeof ApiPublicCronSendRemindersRoute
   ApiPublicPayOrderIdRoute: typeof ApiPublicPayOrderIdRoute
   ApiPublicPaymentsPollRoute: typeof ApiPublicPaymentsPollRoute
   ApiPublicSubscriptionWebhookRoute: typeof ApiPublicSubscriptionWebhookRoute
@@ -375,6 +401,13 @@ declare module '@tanstack/react-router' {
       path: '/api-keys'
       fullPath: '/api-keys'
       preLoaderRoute: typeof AuthenticatedApiKeysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/generate': {
@@ -461,6 +494,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsersIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/send-reminders': {
+      id: '/api/public/cron/send-reminders'
+      path: '/api/public/cron/send-reminders'
+      fullPath: '/api/public/cron/send-reminders'
+      preLoaderRoute: typeof ApiPublicCronSendRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/pay/$orderId': {
       id: '/api/public/pay/$orderId'
       path: '/api/public/pay/$orderId'
@@ -508,6 +548,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGenerateRoute: typeof AuthenticatedGenerateRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -521,6 +562,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGenerateRoute: AuthenticatedGenerateRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -555,6 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   PayOrderIdRoute: PayOrderIdRoute,
   PayIndexRoute: PayIndexRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicCronSendRemindersRoute: ApiPublicCronSendRemindersRoute,
   ApiPublicPayOrderIdRoute: ApiPublicPayOrderIdRoute,
   ApiPublicPaymentsPollRoute: ApiPublicPaymentsPollRoute,
   ApiPublicSubscriptionWebhookRoute: ApiPublicSubscriptionWebhookRoute,

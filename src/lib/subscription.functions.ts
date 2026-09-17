@@ -152,3 +152,94 @@ export const checkSubscriptionOrderStatus = createServerFn({ method: "POST" })
     const order = await res.json();
     return { status: order.status };
   });
+  
+  // ============ SYNC ALL PENDING ORDERS ============
+export const syncMyPendingOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const adminClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    // Get admin settings
+    const { data: settings } = await adminClient
+      .from("admin_settings")
+      .select("gateway_api_key, gateway_base_url")
+      .eq("id", 1)
+      .single();
+
+    if (!settings?.gateway_api_key) {
+      throw new Error("Gateway not configured");
+    }
+
+    // Get user's pending subscriptions
+    const { data: pendingSubs } = await adminClient
+      .from("subscriptions")
+      .select("id, payment_order_id, plan, duration_days")
+      .eq("user_id", context.userId)
+      .eq("payment_status", "pending");
+
+    if (!pendingSubs || pendingSubs.length === 0) {
+      return { checked: 0, activated: 0 };
+    }
+
+    const gatewayUrl = settings.gateway_base_url || "https://autuphonepay.vercel.app";
+    let activated = 0;
+
+    for (const sub of pendingSubs) {
+      try {
+        const res = await fetch(
+          `${gatewayUrl}/api/public/v1/orders/${sub.payment_order_id}`,
+          {
+            headers: { Authorization: `Bearer ${settings.gateway_api_key}` },
+          }
+        );
+
+        if (!res.ok) continue;
+        const order = await res.json();
+
+        if (order.status === "paid") {
+          const now = new Date();
+          const expiresAt = new Date(now);
+          expiresAt.setDate(expiresAt.getDate() + sub.duration_days);
+
+          await adminClient
+            .from("subscriptions")
+            .update({
+              payment_status: "paid",
+              started_at: now.toISOString(),
+              expires_at: expiresAt.toISOString(),
+              updated_at: now.toISOString(),
+            })
+            .eq("id", sub.id);
+
+          await adminClient
+            .from("profiles")
+            .update({
+              subscription_plan: sub.plan,
+              subscription_status: "active",
+              subscription_started_at: now.toISOString(),
+              subscription_expires_at: expiresAt.toISOString(),
+              is_verified: true,
+            })
+            .eq("id", context.userId);
+
+          activated++;
+        } else if (order.status === "expired" || order.status === "failed") {
+          await adminClient
+            .from("subscriptions")
+            .update({
+              payment_status: order.status === "expired" ? "cancelled" : "failed",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", sub.id);
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return { checked: pendingSubs.length, activated };
+  });
