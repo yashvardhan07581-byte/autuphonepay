@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { swalSuccess } from "@/lib/swal";
 import {
-  Settings as SettingsIcon, KeyRound, Lock, CreditCard, Save, Eye, EyeOff, Loader2,
+  Settings as SettingsIcon, KeyRound, Lock, CreditCard, Save, Eye, EyeOff, Loader2, Mail,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
@@ -35,8 +35,12 @@ function GatewaySettings() {
   const [payeeName, setPayeeName] = useState("");
   const [baseUrl, setBaseUrl] = useState("https://autuphonepay.vercel.app");
 
+  const [gmailUser, setGmailUser] = useState("");
+  const [gmailAppPassword, setGmailAppPassword] = useState("");
+
   const [showApiKey, setShowApiKey] = useState(false);
   const [showWebhook, setShowWebhook] = useState(false);
+  const [showGmailPass, setShowGmailPass] = useState(false);
 
   useEffect(() => {
     supabase
@@ -53,6 +57,8 @@ function GatewaySettings() {
           setUpiId(data.subscription_upi_id ?? "");
           setPayeeName(data.subscription_payee_name ?? "");
           setBaseUrl(data.gateway_base_url ?? "https://autuphonepay.vercel.app");
+          setGmailUser(data.gmail_user ?? "");
+          setGmailAppPassword(data.gmail_app_password ?? "");
         }
         setLoading(false);
       });
@@ -71,6 +77,8 @@ function GatewaySettings() {
           subscription_upi_id: upiId.trim() || null,
           subscription_payee_name: payeeName.trim() || null,
           gateway_base_url: baseUrl.trim() || null,
+          gmail_user: gmailUser.trim() || null,
+          gmail_app_password: gmailAppPassword.trim() || null,
           updated_by: user?.id,
           updated_at: new Date().toISOString(),
         })
@@ -95,7 +103,6 @@ function GatewaySettings() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
       <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6 flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
           <SettingsIcon className="w-6 h-6 text-white" />
@@ -108,95 +115,129 @@ function GatewaySettings() {
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={save} className="bg-white rounded-2xl shadow-xl border border-black/5 p-8 space-y-6">
-        {/* API Key */}
-        <Field
-          label="Gateway API Key"
-          hint="Your AutoUPI API key (lk_live_...). Used to create subscription orders."
-          icon={KeyRound}
-        >
-          <div className="relative">
-            <input
-              type={showApiKey ? "text" : "password"}
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="lk_live_..."
-              className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
-            />
-            <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+        {/* ============ GATEWAY SECTION ============ */}
+        <div className="space-y-5">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+            <CreditCard className="w-4 h-4 text-[#0d4a3a]" />
+            <h2 className="text-lg font-bold text-[#0d1b2a]">Gateway Settings</h2>
           </div>
-        </Field>
 
-        {/* Webhook Secret */}
-        <Field
-          label="Webhook Secret"
-          hint="HMAC secret (whsec_...) for verifying webhook signatures."
-          icon={Lock}
-        >
-          <div className="relative">
+          <Field label="Gateway API Key" hint="Your AutoUPI API key (lk_live_...). Used to create subscription orders." icon={KeyRound}>
+            <div className="relative">
+              <input
+                type={showApiKey ? "text" : "password"}
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="lk_live_..."
+                className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowApiKey(!showApiKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Webhook Secret" hint="HMAC secret (whsec_...) for verifying webhook signatures." icon={Lock}>
+            <div className="relative">
+              <input
+                type={showWebhook ? "text" : "password"}
+                value={webhookSecret}
+                onChange={(e) => setWebhookSecret(e.target.value)}
+                placeholder="whsec_..."
+                className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowWebhook(!showWebhook)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showWebhook ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </Field>
+
+          <Field label="Subscription UPI ID" hint="UPI VPA where subscription payments will be received." icon={CreditCard}>
             <input
-              type={showWebhook ? "text" : "password"}
-              value={webhookSecret}
-              onChange={(e) => setWebhookSecret(e.target.value)}
-              placeholder="whsec_..."
-              className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
+              type="text"
+              value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              placeholder="yourname@ybl"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
             />
-            <button
-              type="button"
-              onClick={() => setShowWebhook(!showWebhook)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showWebhook ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+          </Field>
+
+          <Field label="Payee Name" hint="Business name shown to payers on the payment page.">
+            <input
+              type="text"
+              value={payeeName}
+              onChange={(e) => setPayeeName(e.target.value)}
+              placeholder="AutoUPI"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none"
+            />
+          </Field>
+
+          <Field label="Gateway Base URL" hint="Your gateway's base URL. Used for API calls and webhook callbacks.">
+            <input
+              type="url"
+              value={baseUrl}
+              onChange={(e) => setBaseUrl(e.target.value)}
+              placeholder="https://autuphonepay.vercel.app"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
+            />
+          </Field>
+        </div>
+
+        {/* ============ GMAIL SMTP SECTION ============ */}
+        <div className="space-y-5 pt-6 border-t border-gray-100">
+          <div className="flex items-center gap-2 pb-2">
+            <Mail className="w-4 h-4 text-[#0d4a3a]" />
+            <h2 className="text-lg font-bold text-[#0d1b2a]">Gmail SMTP (Email Notifications)</h2>
           </div>
-        </Field>
 
-        {/* UPI ID */}
-        <Field
-          label="Subscription UPI ID"
-          hint="UPI VPA where subscription payments will be received."
-          icon={CreditCard}
-        >
-          <input
-            type="text"
-            value={upiId}
-            onChange={(e) => setUpiId(e.target.value)}
-            placeholder="yourname@ybl"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
-          />
-        </Field>
+          <div className="rounded-lg bg-blue-50 border border-blue-100 p-4 text-sm text-blue-800">
+            <strong>How to get App Password:</strong>
+            <ol className="list-decimal ml-5 mt-1 space-y-0.5">
+              <li>Gmail → 2-Step Verification ON karo</li>
+              <li>Visit: myaccount.google.com/apppasswords</li>
+              <li>Generate 16-character password</li>
+              <li>Paste below (spaces ke saath ya bina)</li>
+            </ol>
+          </div>
 
-        {/* Payee Name */}
-        <Field label="Payee Name" hint="Business name shown to payers on the payment page.">
-          <input
-            type="text"
-            value={payeeName}
-            onChange={(e) => setPayeeName(e.target.value)}
-            placeholder="AutoUPI"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none"
-          />
-        </Field>
+          <Field label="Gmail Address" hint="Email address to send notifications from." icon={Mail}>
+            <input
+              type="email"
+              value={gmailUser}
+              onChange={(e) => setGmailUser(e.target.value)}
+              placeholder="yourname@gmail.com"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none"
+            />
+          </Field>
 
-        {/* Base URL */}
-        <Field
-          label="Gateway Base URL"
-          hint="Your gateway's base URL. Used for API calls and webhook callbacks."
-        >
-          <input
-            type="url"
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.target.value)}
-            placeholder="https://autuphonepay.vercel.app"
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
-          />
-        </Field>
+          <Field label="Gmail App Password" hint="16-character app password (not your Gmail password)." icon={Lock}>
+            <div className="relative">
+              <input
+                type={showGmailPass ? "text" : "password"}
+                value={gmailAppPassword}
+                onChange={(e) => setGmailAppPassword(e.target.value)}
+                placeholder="abcd efgh ijkl mnop"
+                className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none font-mono text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => setShowGmailPass(!showGmailPass)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showGmailPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </Field>
+        </div>
 
         {/* Save */}
         <button
@@ -205,19 +246,9 @@ function GatewaySettings() {
           className="w-full py-3.5 rounded-lg bg-[#0d4a3a] hover:bg-[#0a3d30] text-white font-bold tracking-wide transition disabled:opacity-60 flex items-center justify-center gap-2"
         >
           <Save className="w-4 h-4" />
-          {saving ? "Saving..." : "SAVE SETTINGS"}
+          {saving ? "Saving..." : "SAVE ALL SETTINGS"}
         </button>
       </form>
-
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
-        <h3 className="font-semibold text-blue-900 mb-2">Where to find these?</h3>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-          <li>API Key & Webhook Secret: Your AutoUPI dashboard → API Keys page</li>
-          <li>Subscription UPI ID: Same UPI ID you use for receiving payments</li>
-          <li>Payee Name: Business name shown on UPI apps</li>
-        </ul>
-      </div>
     </div>
   );
 }

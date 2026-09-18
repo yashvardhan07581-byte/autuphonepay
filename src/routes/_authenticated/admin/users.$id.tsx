@@ -2,13 +2,18 @@ import { createFileRoute, redirect, useParams, Link } from "@tanstack/react-rout
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { adminSendPasswordReset } from "@/lib/admin.functions";
+import {
+  adminSendPasswordReset,
+  adminDirectPasswordChange,
+} from "@/lib/admin.functions";
+import { sendSubscriptionReminderEmail } from "@/lib/gmail.functions";
 import { toast } from "sonner";
 import { swalSuccess } from "@/lib/swal";
 import Swal from "sweetalert2";
 import {
   ArrowLeft, User as UserIcon, CreditCard, Loader2, CheckCircle2, XCircle,
   Trash2, KeyRound, Save, ShoppingCart, DollarSign, TrendingUp, History,
+  Mail, Eye, EyeOff, Bell,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/users/$id")({
@@ -28,6 +33,7 @@ type UserDetail = {
   id: string;
   email: string | null;
   display_name: string | null;
+  whatsapp: string | null;
   upi_id: string | null;
   payee_name: string | null;
   role: string;
@@ -72,7 +78,15 @@ function UserDetailPage() {
   const [plan, setPlan] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string>("");
 
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPass, setChangingPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+
+  const [sendingReminder, setSendingReminder] = useState<string | null>(null);
+
   const sendReset = useServerFn(adminSendPasswordReset);
+  const directPassChange = useServerFn(adminDirectPasswordChange);
+  const sendReminderEmail = useServerFn(sendSubscriptionReminderEmail);
 
   useEffect(() => {
     load();
@@ -100,14 +114,12 @@ function UserDetailPage() {
           : ""
       );
 
-      // Merchant ID
       const { data: merchant } = await supabase
         .from("merchants")
         .select("id")
         .eq("owner_id", id)
         .maybeSingle();
 
-      // Orders
       if (merchant) {
         const { data: o } = await supabase
           .from("orders")
@@ -118,7 +130,6 @@ function UserDetailPage() {
         setOrders(o ?? []);
       }
 
-      // Subscriptions
       const { data: s } = await supabase
         .from("subscriptions")
         .select("id, plan, amount, payment_status, started_at, expires_at, created_at")
@@ -205,6 +216,71 @@ function UserDetailPage() {
     }
   }
 
+  async function handleDirectPasswordChange() {
+    if (newPassword.length < 8) {
+      return toast.error("Password must be at least 8 characters");
+    }
+
+    const confirm = await Swal.fire({
+      title: "Change password directly?",
+      text: `This will immediately change ${user?.email}'s password. No email will be sent.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#0d4a3a",
+      confirmButtonText: "Yes, change it",
+      cancelButtonText: "Cancel",
+    });
+    if (!confirm.isConfirmed) return;
+
+    setChangingPass(true);
+    try {
+      await directPassChange({
+        data: {
+          user_id: user!.id,
+          new_password: newPassword,
+        },
+      });
+      swalSuccess("Password changed successfully");
+      setNewPassword("");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setChangingPass(false);
+    }
+  }
+
+  async function sendSubscriptionReminder(type: "expiring" | "expired") {
+    if (!user?.email) {
+      return toast.error("User has no email");
+    }
+
+    const confirm = await Swal.fire({
+      title: type === "expiring" ? "Send Expiring Reminder?" : "Send Expired Reminder?",
+      html: `Email will be sent to <strong>${user.email}</strong>`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#0d4a3a",
+      confirmButtonText: "Send Email",
+      cancelButtonText: "Cancel",
+    });
+    if (!confirm.isConfirmed) return;
+
+    setSendingReminder(type);
+    try {
+      const result = await sendReminderEmail({
+        data: {
+          user_id: user.id,
+          type,
+        },
+      });
+      swalSuccess(`Email sent to ${result.to}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSendingReminder(null);
+    }
+  }
+
   async function deleteUser() {
     const confirm = await Swal.fire({
       title: "Delete this user?",
@@ -248,7 +324,6 @@ function UserDetailPage() {
     );
   }
 
-  // Stats
   const paidOrders = orders.filter((o) => o.status === "paid");
   const totalRevenue = paidOrders.reduce((s, o) => s + Number(o.payable_amount), 0);
   const totalSubsSpent = subs
@@ -280,24 +355,9 @@ function UserDetailPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <StatBox
-          title="Total Orders"
-          value={orders.length}
-          icon={ShoppingCart}
-          color="blue"
-        />
-        <StatCard
-          title="Order Revenue"
-          value={`₹${totalRevenue.toLocaleString("en-IN")}`}
-          icon={DollarSign}
-          color="emerald"
-        />
-        <StatCard
-          title="Subscriptions Spent"
-          value={`₹${totalSubsSpent.toLocaleString("en-IN")}`}
-          icon={TrendingUp}
-          color="purple"
-        />
+        <StatBox title="Total Orders" value={orders.length} icon={ShoppingCart} color="blue" />
+        <StatCard title="Order Revenue" value={`₹${totalRevenue.toLocaleString("en-IN")}`} icon={DollarSign} color="emerald" />
+        <StatCard title="Subscriptions Spent" value={`₹${totalSubsSpent.toLocaleString("en-IN")}`} icon={TrendingUp} color="purple" />
       </div>
 
       {/* Info Cards */}
@@ -305,6 +365,7 @@ function UserDetailPage() {
         <InfoCard title="Basic Info" icon={UserIcon}>
           <Row label="Email" value={user.email ?? "—"} />
           <Row label="Display Name" value={user.display_name ?? "—"} />
+          <Row label="WhatsApp" value={user.whatsapp ?? "—"} mono />
           <Row label="UPI ID" value={user.upi_id ?? "—"} mono />
           <Row label="Payee Name" value={user.payee_name ?? "—"} />
           <Row
@@ -318,10 +379,7 @@ function UserDetailPage() {
         </InfoCard>
 
         <InfoCard title="Subscription" icon={CreditCard}>
-          <Row
-            label="Current Plan"
-            value={user.subscription_plan ? user.subscription_plan.toUpperCase() : "Free"}
-          />
+          <Row label="Current Plan" value={user.subscription_plan ? user.subscription_plan.toUpperCase() : "Free"} />
           <Row label="Status" value={user.subscription_status} />
           <Row
             label="Expires"
@@ -340,9 +398,7 @@ function UserDetailPage() {
           <ShoppingCart className="w-5 h-5 text-[#0d4a3a]" /> Recent Orders
         </h2>
         {orders.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            No orders yet
-          </div>
+          <div className="text-center py-8 text-gray-500 text-sm">No orders yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -363,9 +419,7 @@ function UserDetailPage() {
                     <td className="py-3 font-semibold text-[#0d1b2a]">
                       ₹{Number(o.payable_amount).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3">
-                      <StatusBadge status={o.status} />
-                    </td>
+                    <td className="py-3"><StatusBadge status={o.status} /></td>
                     <td className="py-3 text-xs text-gray-500">
                       {new Date(o.created_at).toLocaleDateString("en-IN", {
                         day: "numeric",
@@ -386,9 +440,7 @@ function UserDetailPage() {
           <History className="w-5 h-5 text-[#0d4a3a]" /> Subscription History
         </h2>
         {subs.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
-            No subscriptions yet
-          </div>
+          <div className="text-center py-8 text-gray-500 text-sm">No subscriptions yet</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -404,24 +456,16 @@ function UserDetailPage() {
               <tbody className="divide-y divide-gray-100">
                 {subs.map((s) => (
                   <tr key={s.id} className="text-sm">
-                    <td className="py-3">
-                      <PlanBadge plan={s.plan} />
-                    </td>
+                    <td className="py-3"><PlanBadge plan={s.plan} /></td>
                     <td className="py-3 font-semibold text-[#0d1b2a]">
                       ₹{Number(s.amount).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3">
-                      <StatusBadge status={s.payment_status} />
+                    <td className="py-3"><StatusBadge status={s.payment_status} /></td>
+                    <td className="py-3 text-xs text-gray-500">
+                      {s.started_at ? new Date(s.started_at).toLocaleDateString("en-IN") : "—"}
                     </td>
                     <td className="py-3 text-xs text-gray-500">
-                      {s.started_at
-                        ? new Date(s.started_at).toLocaleDateString("en-IN")
-                        : "—"}
-                    </td>
-                    <td className="py-3 text-xs text-gray-500">
-                      {s.expires_at
-                        ? new Date(s.expires_at).toLocaleDateString("en-IN")
-                        : "—"}
+                      {s.expires_at ? new Date(s.expires_at).toLocaleDateString("en-IN") : "—"}
                     </td>
                   </tr>
                 ))}
@@ -509,21 +553,76 @@ function UserDetailPage() {
           {saving ? "Saving..." : "SAVE CHANGES"}
         </button>
 
-        <div className="pt-6 border-t border-gray-200">
-          <h3 className="text-sm font-bold text-[#0d1b2a] mb-3">Account Security</h3>
-          <button
-            onClick={handlePasswordReset}
-            disabled={resetting}
-            className="px-4 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-sm transition flex items-center gap-2 disabled:opacity-60"
-          >
-            <KeyRound className="w-4 h-4" />
-            {resetting ? "Sending..." : "Send Password Reset Email"}
-          </button>
-          <p className="text-xs text-gray-500 mt-2">
-            User will receive an email with a link to set a new password.
-          </p>
+        {/* Account Security */}
+        <div className="pt-6 border-t border-gray-200 space-y-4">
+          <h3 className="text-sm font-bold text-[#0d1b2a]">Account Security</h3>
+
+          {/* Direct Password Change */}
+          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 space-y-3">
+            <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
+              <KeyRound className="w-4 h-4" />
+              Direct Password Change (No Email)
+            </div>
+            <p className="text-xs text-emerald-700">
+              Set a new password immediately. User will be able to login with it right away.
+            </p>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showNewPass ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password (min 8 chars)"
+                  className="w-full px-4 py-2.5 pr-11 rounded-lg border border-emerald-300 focus:border-emerald-500 outline-none text-sm bg-white"
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                >
+                  {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <button
+                onClick={handleDirectPasswordChange}
+                disabled={changingPass || newPassword.length < 8}
+                className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-60 whitespace-nowrap"
+              >
+                {changingPass ? "Changing..." : "Change Password"}
+              </button>
+            </div>
+          </div>
+
+          {/* Subscription Reminder */}
+          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-3">
+            <div className="flex items-center gap-2 text-amber-800 font-semibold text-sm">
+              <Bell className="w-4 h-4" />
+              Send Subscription Reminder
+            </div>
+            <p className="text-xs text-amber-700">
+              Send an email reminder to this user about their subscription status.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => sendSubscriptionReminder("expiring")}
+                disabled={sendingReminder !== null || !user?.email}
+                className="flex-1 px-3 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition disabled:opacity-60"
+              >
+                {sendingReminder === "expiring" ? "Sending..." : "Expiring Reminder"}
+              </button>
+              <button
+                onClick={() => sendSubscriptionReminder("expired")}
+                disabled={sendingReminder !== null || !user?.email}
+                className="flex-1 px-3 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition disabled:opacity-60"
+              >
+                {sendingReminder === "expired" ? "Sending..." : "Expired Reminder"}
+              </button>
+            </div>
+          </div>
         </div>
 
+        {/* Danger Zone */}
         <div className="pt-6 border-t border-gray-200">
           <h3 className="text-sm font-bold text-red-600 mb-3">Danger Zone</h3>
           <button

@@ -106,3 +106,47 @@ export const adminSendPasswordReset = createServerFn({ method: "POST" })
 
     return { sent: true, email: targetUser.email };
   });
+  // ============ DIRECT PASSWORD CHANGE (Admin — no email) ============
+const DirectPasswordSchema = z.object({
+  user_id: z.string().uuid(),
+  new_password: z.string().min(8).max(72),
+});
+
+export const adminDirectPasswordChange = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((input) => DirectPasswordSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const adminClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    // Verify caller is admin
+    const { data: callerProfile } = await adminClient
+      .from("profiles")
+      .select("role")
+      .eq("id", context.userId)
+      .single();
+
+    if (callerProfile?.role !== "admin") {
+      throw new Error("Only admins can change user passwords");
+    }
+
+    // Directly update password
+    const { error } = await adminClient.auth.admin.updateUserById(data.user_id, {
+      password: data.new_password,
+    });
+
+    if (error) throw new Error(error.message);
+
+    // Log action
+    await adminClient.from("admin_actions_log").insert({
+      admin_id: context.userId,
+      action: "direct_password_change",
+      target_user_id: data.user_id,
+      details: { changed_at: new Date().toISOString() },
+    });
+
+    return { success: true };
+  });

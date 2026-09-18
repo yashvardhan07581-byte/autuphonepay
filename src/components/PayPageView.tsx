@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Loader2, Clock, AlertCircle, Copy, Check } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import bhimUpiUrl from "@/assets/bhim-upi-real.jpg";
 import upiAppsUrl from "@/assets/upi-apps-real.jpg";
-import panmeLogoUrl from "@/assets/panme-logo.jpg";
+import panmeLogoUrl from "@/assets/phonepe.png";
 
 const PAYEE_NAME_FALLBACK = "Merchant";
 const BHIM_UPI_LOGO = bhimUpiUrl;
@@ -60,7 +60,7 @@ export function PayPageView({ orderId }: { orderId: string }) {
                 processingTimerRef.current = null;
                 setProcessing(false);
                 setOrder(next);
-              }, 3000);
+              }, 1500);
             }
             return prev;
           }
@@ -74,7 +74,7 @@ export function PayPageView({ orderId }: { orderId: string }) {
     const loop = async () => {
       await fetchOnce();
       if (!active) return;
-      timer = setTimeout(loop, 2000);
+      timer = setTimeout(loop, 1000);
     };
     loop();
 
@@ -270,7 +270,7 @@ export function PayPageView({ orderId }: { orderId: string }) {
 
             {/* Merchant name + Transfer to */}
             <div className="text-center px-5 pb-3">
-              <div className="text-[20px] sm:text-[22px] font-bold text-[#1a2b4a] leading-tight">Panme Shop</div>
+              <div className="text-[20px] sm:text-[22px] font-bold text-[#1a2b4a] leading-tight">PRINCE SOFTTECH UPI GATEWAY</div>
               <div className="text-sm text-gray-400 mt-1">Transfer to</div>
             </div>
 

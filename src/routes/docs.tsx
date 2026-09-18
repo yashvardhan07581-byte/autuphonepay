@@ -130,12 +130,12 @@ function DocsPage() {
 
               <CodeBlock title="Response (201 Created)" lang="json">
                 {`{
-  "order_id": "PANME-1234567890",
+  "order_id": "PRINTSOFTTECH-1234567890",
   "payable_amount": 100.07,
   "status": "pending",
   "expires_at": "2026-09-08T17:30:00.000Z",
-  "payment_url": "${BASE}/pay/PANME-1234567890",
-  "upi_uri": "upi://pay?pa=...&am=100.07&cu=INR&tn=PANME-1234567890",
+  "payment_url": "${BASE}/pay/PRINTSOFTTECH-1234567890",
+  "upi_uri": "upi://pay?pa=...&am=100.07&cu=INR&tn=PRINTSOFTTECH-1234567890",
   "qr_base64": "data:image/svg+xml;base64,..."
 }`}
               </CodeBlock>
@@ -226,7 +226,7 @@ window.location.href = order.payment_url;`}
               <CodeBlock title="payment.success" lang="json">
                 {`{
   "event": "payment.success",
-  "order_id": "PANME-1234567890",
+  "order_id": "PRINTSOFTTECH-1234567890",
   "merchant_order_id": "order_12345",
   "amount": 100,
   "payable_amount": 100.07,
@@ -289,13 +289,13 @@ export async function POST(req: Request) {
               </p>
 
               <CodeBlock title="Request" lang="bash">
-                {`curl ${BASE}/api/public/v1/orders/PANME-1234567890 \\
+                {`curl ${BASE}/api/public/v1/orders/PRINTSOFTTECH-1234567890 \\
   -H "Authorization: Bearer <YOUR_API_KEY>"`}
               </CodeBlock>
 
               <CodeBlock title="Response" lang="json">
                 {`{
-  "order_id": "PANME-1234567890",
+  "order_id": "PRINTSOFTTECH-1234567890",
   "status": "paid",
   "amount": 100,
   "payable_amount": 100.07,

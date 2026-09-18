@@ -27,6 +27,7 @@ type UserRow = {
   id: string;
   email: string | null;
   display_name: string | null;
+  whatsapp: string | null;
   role: string;
   is_verified: boolean;
   subscription_plan: string | null;
@@ -45,9 +46,9 @@ function UsersPage() {
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
+        const { data, error } = await supabase
       .from("profiles")
-      .select("id,email,display_name,role,is_verified,subscription_plan,subscription_status,subscription_expires_at,created_at")
+      .select("id,email,display_name,whatsapp,role,is_verified,subscription_plan,subscription_status,subscription_expires_at,created_at")
       .order("created_at", { ascending: false });
     if (error) toast.error(error.message);
     else setUsers(data ?? []);
@@ -138,8 +139,9 @@ function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
-                <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                               <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   <th className="px-6 py-3">User</th>
+                  <th className="px-6 py-3">WhatsApp</th>
                   <th className="px-6 py-3">Role</th>
                   <th className="px-6 py-3">Verified</th>
                   <th className="px-6 py-3">Subscription</th>
@@ -150,11 +152,20 @@ function UsersPage() {
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((u) => (
                   <tr key={u.id} className="hover:bg-gray-50/50 transition">
-                    <td className="px-6 py-4">
+                                        <td className="px-6 py-4">
                       <div className="font-medium text-[#0d1b2a] text-sm">
                         {u.display_name || "—"}
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5">{u.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {u.whatsapp ? (
+                        <span className="text-xs text-gray-700 font-mono">
+                          {u.whatsapp}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <RoleBadge role={u.role} />

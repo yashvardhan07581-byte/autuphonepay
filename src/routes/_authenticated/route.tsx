@@ -4,7 +4,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
   SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
-import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard ,Home} from "lucide-react";
+import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard ,Home,UserCircle} from "lucide-react";
 import { swalSuccess } from "@/lib/swal";
 import logoUrl from "@/assets/panme-logo.jpg";
 import { AdminSidebarSection } from "@/components/admin/AdminSidebar";
@@ -24,14 +24,15 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: AuthedLayout,
 });
-
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
+  { title: "Profile", url: "/profile", icon: UserCircle },
   { title: "Generate QR", url: "/generate", icon: QrCode },
   { title: "History", url: "/history", icon: History },
   { title: "Subscription", url: "/subscription", icon: CreditCard },
   { title: "API Keys", url: "/api-keys", icon: KeyRound },
   { title: "Settings", url: "/settings", icon: Settings },
+  
 ];
 
 function AdminSidebarGroup() {

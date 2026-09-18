@@ -471,7 +471,7 @@ function PaymentModal({
     }
 
     poll();
-    intervalRef.current = window.setInterval(poll, 3000);
+    intervalRef.current = window.setInterval(poll, 1500);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

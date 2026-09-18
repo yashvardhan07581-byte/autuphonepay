@@ -135,7 +135,7 @@ export async function fetchRecentMessages(opts: {
       user,
       pass,
       since,
-      max: Math.max(opts.maxResults * 4, 20),
+            max: Math.min(opts.maxResults, 5),
     });
 
     const out: InboxMessage[] = [];
