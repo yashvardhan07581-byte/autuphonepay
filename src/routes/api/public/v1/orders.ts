@@ -125,7 +125,6 @@ export const Route = createFileRoute("/api/public/v1/orders")({
            if (!merchant.active) return json({ error: "merchant_disabled" }, 403);
 
            // ============ SUBSCRIPTION CHECK ============
-           // Merchant ke owner ka subscription active hai ya nahi
            const { data: subCheck } = await supabase
              .from("profiles")
              .select("subscription_status, subscription_expires_at")
@@ -138,11 +137,11 @@ export const Route = createFileRoute("/api/public/v1/orders")({
              new Date(subCheck.subscription_expires_at) > new Date();
 
            if (!isSubscriptionActive) {
+             const origin = resolvePublicOrigin(request);
              return json(
                {
                  error: "subscription_expired",
-                 message:
-                   "Your subscription has expired. Please renew at https://autuphonepay.vercel.app/subscription to create new orders.",
+                 message: `Your subscription has expired. Please renew at ${origin}/subscription to create new orders.`,
                },
                403,
              );
