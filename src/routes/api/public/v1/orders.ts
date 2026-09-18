@@ -18,10 +18,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json", ...CORS },
   });
-
-
-
-
 }
 
 const BodySchema = z.object({
@@ -128,6 +124,31 @@ export const Route = createFileRoute("/api/public/v1/orders")({
            if (!merchant) return json({ error: "invalid_api_key" }, 401);
            if (!merchant.active) return json({ error: "merchant_disabled" }, 403);
 
+           // ============ SUBSCRIPTION CHECK ============
+           // Merchant ke owner ka subscription active hai ya nahi
+           const { data: subCheck } = await supabase
+             .from("profiles")
+             .select("subscription_status, subscription_expires_at")
+             .eq("id", merchant.owner_id)
+             .maybeSingle();
+
+           const isSubscriptionActive =
+             subCheck?.subscription_status === "active" &&
+             subCheck?.subscription_expires_at !== null &&
+             new Date(subCheck.subscription_expires_at) > new Date();
+
+           if (!isSubscriptionActive) {
+             return json(
+               {
+                 error: "subscription_expired",
+                 message:
+                   "Your subscription has expired. Please renew at https://autuphonepay.vercel.app/subscription to create new orders.",
+               },
+               403,
+             );
+           }
+           // ============ END SUBSCRIPTION CHECK ============
+
            // Always read the merchant owner's latest UPI ID + payee at order time,
            // so updating the VPA in Settings takes effect immediately for every
            // new order — dashboard and merchant API integration alike.
@@ -135,10 +156,6 @@ export const Route = createFileRoute("/api/public/v1/orders")({
              .from("profiles")
              .select("upi_id,payee_name")
              .eq("id", merchant.owner_id)
-
-
-
-
              .maybeSingle();
            const upiId = ownerProfile?.upi_id?.trim() || "";
            const payeeName = ownerProfile?.payee_name?.trim() || DEFAULT_PAYEE;
@@ -241,47 +258,43 @@ export const Route = createFileRoute("/api/public/v1/orders")({
                  payable_amount: payable,
                  status: "pending",
                  expiry_at: expiry.toISOString(),
-
-
-
-
-                  merchant_id: merchant.id,
-                  merchant_order_id: parsed.merchant_order_id,
-                  webhook_url: parsed.webhook_url,
-                  success_url: parsed.success_url,
-                  failure_url: parsed.failure_url,
-                  customer_email: parsed.customer?.email ?? null,
-                  upi_pa: upiId,
-                  upi_pn: payeeName,
-                })
-                .select()
-                .single();
-              if (!error && inserted) {
-                const origin = resolvePublicOrigin(request);
-                const upiUri = buildUpiUri(
-                  upiId,
-                  payeeName,
-                  Number(inserted.payable_amount),
-                  inserted.merchant_order_id, 
-                );
-                return json(
-                  {
-                    order_id: inserted.order_id,
-                    payable_amount: Number(inserted.payable_amount),
-                    status: inserted.status,
-                    expires_at: inserted.expiry_at,
-                    payment_url: `${origin}/pay/${inserted.order_id}`,
-                    upi_uri: upiUri,
-                    qr_base64: await buildQrDataUrl(upiUri),
-                  },
-                  201,
-                );
-              }
-              if (error && !/duplicate/i.test(error.message)) {
-                return json({ error: "db_error", message: error.message }, 500);
-              }
-          }
-          return json({ error: "all_payment_slots_busy" }, 503);
+                 merchant_id: merchant.id,
+                 merchant_order_id: parsed.merchant_order_id,
+                 webhook_url: parsed.webhook_url,
+                 success_url: parsed.success_url,
+                 failure_url: parsed.failure_url,
+                 customer_email: parsed.customer?.email ?? null,
+                 upi_pa: upiId,
+                 upi_pn: payeeName,
+               })
+               .select()
+               .single();
+             if (!error && inserted) {
+               const origin = resolvePublicOrigin(request);
+               const upiUri = buildUpiUri(
+                 upiId,
+                 payeeName,
+                 Number(inserted.payable_amount),
+                 inserted.merchant_order_id, 
+               );
+               return json(
+                 {
+                   order_id: inserted.order_id,
+                   payable_amount: Number(inserted.payable_amount),
+                   status: inserted.status,
+                   expires_at: inserted.expiry_at,
+                   payment_url: `${origin}/pay/${inserted.order_id}`,
+                   upi_uri: upiUri,
+                   qr_base64: await buildQrDataUrl(upiUri),
+                 },
+                 201,
+               );
+             }
+             if (error && !/duplicate/i.test(error.message)) {
+               return json({ error: "db_error", message: error.message }, 500);
+             }
+           }
+           return json({ error: "all_payment_slots_busy" }, 503);
         } catch (e: any) {
           return json({ error: "internal_error", message: e.message }, 500);
         }
