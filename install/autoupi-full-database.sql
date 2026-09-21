@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict klFWgKdZ0cZvoTVMYvn5HKjY8UKZThND5IGjuSpXZmGPUKFx9xsEpWcnG28owjU
+
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.6
@@ -1346,7 +1346,7 @@ ALTER TABLE public.webhook_deliveries ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict klFWgKdZ0cZvoTVMYvn5HKjY8UKZThND5IGjuSpXZmGPUKFx9xsEpWcnG28owjU
+
 
 -- ============ INITIAL DATA ============
 INSERT INTO public.admin_settings (id, admin_email)
