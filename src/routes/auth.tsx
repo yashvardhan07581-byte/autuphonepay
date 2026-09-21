@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate, redirect, isRedirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect, isRedirect, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Eye, EyeOff, Mail, Lock, User as UserIcon, Phone,
-  QrCode, Zap, Shield, TrendingUp, ArrowRight, Check,
+  QrCode, Zap, Shield, TrendingUp, ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { swalSuccess } from "@/lib/swal";
@@ -56,14 +56,12 @@ function AuthPage() {
     <main className="min-h-screen bg-gradient-to-br from-[#e8f5ee] via-[#dfeee5] to-[#cfe3d5] flex">
       {/* ============ LEFT PANEL (Desktop only) ============ */}
       <section className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0d4a3a] to-[#0a3d30] text-white p-10 xl:p-14 flex-col relative overflow-hidden">
-        {/* Background decoration */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-white rounded-full blur-3xl" />
           <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-white rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center gap-3">
             <img
               src={logoUrl}
@@ -76,7 +74,6 @@ function AuthPage() {
             </div>
           </div>
 
-          {/* Headline */}
           <div className="mt-16 max-w-lg">
             <h2 className="font-serif italic text-4xl xl:text-5xl leading-tight">
               {mode === "login"
@@ -88,7 +85,6 @@ function AuthPage() {
             </p>
           </div>
 
-          {/* Feature grid */}
           <div className="mt-auto pt-12 grid grid-cols-2 gap-3 max-w-lg">
             {[
               { icon: QrCode, t: "Instant QR", s: "Generate in seconds" },
@@ -115,7 +111,6 @@ function AuthPage() {
       {/* ============ RIGHT PANEL (Form) ============ */}
       <section className="flex-1 flex items-center justify-center p-5 sm:p-8 lg:p-12">
         <div className="w-full max-w-md">
-          {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-3 mb-8">
             <img
               src={logoUrl}
@@ -128,7 +123,6 @@ function AuthPage() {
             </div>
           </div>
 
-          {/* Form card */}
           <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-6 sm:p-8">
             {mode === "login" ? (
               <LoginForm onSwitch={() => setMode("register")} />
@@ -137,7 +131,6 @@ function AuthPage() {
             )}
           </div>
 
-          {/* Footer note */}
           <p className="text-center text-xs text-gray-500 mt-6">
             By continuing, you agree to our{" "}
             <a className="underline font-medium hover:text-[#0d4a3a]">Terms</a> and{" "}
@@ -172,18 +165,8 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
     navigate({ to: redirectPath });
   }
 
-  async function onForgot() {
-    if (!email) return toast.error("Enter your email above first");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) return toast.error(error.message);
-    swalSuccess("Password reset link sent to your email");
-  }
-
   return (
     <form onSubmit={submit} className="space-y-5">
-      {/* Header */}
       <div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0d1b2a]">
           Welcome back
@@ -193,7 +176,6 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
         </p>
       </div>
 
-      {/* Email */}
       <div>
         <label className="block text-sm font-medium text-[#0d1b2a] mb-1.5">
           Email address
@@ -211,17 +193,17 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* Password */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="text-sm font-medium text-[#0d1b2a]">Password</label>
-          <button
-            type="button"
-            onClick={onForgot}
+          <label className="text-sm font-medium text-[#0d1b2a]">
+            Password
+          </label>
+          <Link
+            to="/forgot-password"
             className="text-xs font-semibold text-[#0d4a3a] hover:underline"
           >
             Forgot password?
-          </button>
+          </Link>
         </div>
         <div className="relative">
           <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -243,7 +225,6 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={loading}
@@ -256,7 +237,6 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
         )}
       </button>
 
-      {/* Switch */}
       <p className="text-center text-sm text-gray-600">
         Don't have an account?{" "}
         <button
@@ -310,7 +290,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {/* Header */}
       <div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0d1b2a]">
           Create account
@@ -320,7 +299,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </p>
       </div>
 
-      {/* Name */}
       <div>
         <label className="block text-sm font-medium text-[#0d1b2a] mb-1.5">
           Full name
@@ -338,7 +316,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* WhatsApp */}
       <div>
         <label className="block text-sm font-medium text-[#0d1b2a] mb-1.5">
           WhatsApp number
@@ -361,7 +338,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* Email */}
       <div>
         <label className="block text-sm font-medium text-[#0d1b2a] mb-1.5">
           Email address
@@ -379,7 +355,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* Password */}
       <div>
         <label className="block text-sm font-medium text-[#0d1b2a] mb-1.5">
           Password
@@ -405,7 +380,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </div>
       </div>
 
-      {/* Terms */}
       <label className="flex items-start gap-2.5 text-sm text-[#0d1b2a] cursor-pointer">
         <input
           type="checkbox"
@@ -421,7 +395,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </span>
       </label>
 
-      {/* Submit */}
       <button
         type="submit"
         disabled={loading || !agree}
@@ -434,7 +407,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         )}
       </button>
 
-      {/* Switch */}
       <p className="text-center text-sm text-gray-600">
         Already have an account?{" "}
         <button
