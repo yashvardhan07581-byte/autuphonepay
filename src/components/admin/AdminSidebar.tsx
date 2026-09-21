@@ -1,82 +1,64 @@
-import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   SidebarMenu, SidebarMenuItem, SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, DollarSign, Settings } from "lucide-react";
+import {
+  LayoutDashboard, Users, DollarSign, Settings, ShieldCheck, BookOpen,
+} from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin/AdminSidebar")({
-  ssr: false,
-  beforeLoad: async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw redirect({ to: "/auth" });
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        throw redirect({ to: "/generate" });
-      }
-
-      return { user };
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in (e as any)) throw e;
-      throw redirect({ to: "/auth" });
-    }
-  },
-  component: AdminLayout,
-});
-
-function AdminLayout() {
-  return <Outlet />;
-}
-
-// Admin sidebar items — exported so parent layout can use them
 export const adminItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Subscriptions", url: "/admin/subscriptions", icon: DollarSign },
   { title: "Gateway", url: "/admin/settings", icon: Settings },
+  { title: "Docs", url: "/admin/docs", icon: BookOpen },
 ];
 
-// Admin sidebar section component
 export function AdminSidebarSection() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <>
-      <div className="px-3 py-3 text-[11px] font-semibold text-white/50 uppercase tracking-wider">
-        Admin Panel
+    <div className="mt-2">
+      <div className="mx-2 my-3 h-px bg-white/10" />
+      <div className="px-3 py-2 flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+        <ShieldCheck className="w-3.5 h-3.5 text-amber-300/80 shrink-0 group-data-[collapsible=icon]:hidden" />
+        <span className="text-[10px] font-bold text-amber-200/70 uppercase tracking-widest group-data-[collapsible=icon]:hidden">
+          Admin Panel
+        </span>
       </div>
-      <SidebarMenu className="gap-1">
+      <SidebarMenu className="gap-1 px-0 mt-1">
         {adminItems.map((item) => {
-          const active = pathname === item.url;
+          const active = pathname === item.url || pathname.startsWith(item.url + "/");
           return (
             <SidebarMenuItem key={item.url}>
               <SidebarMenuButton
                 asChild
                 tooltip={item.title}
-                className={`group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1 hover:shadow-md ${
-                  active ? "bg-white/20 shadow-inner" : ""
+                className={`group/btn h-10 rounded-lg transition-all duration-200 relative hover:bg-amber-400/10 ${
+                  active
+                    ? "bg-gradient-to-r from-amber-400/20 to-transparent border-l-2 border-amber-400"
+                    : "border-l-2 border-transparent"
                 }`}
               >
-                <Link to={item.url}>
+                <Link to={item.url} className="flex items-center gap-3">
                   <item.icon
-                    className={`w-4 h-4 transition-transform duration-300 group-hover/btn:scale-110 ${
-                      active ? "text-white" : "text-white/80"
+                    className={`w-5 h-5 shrink-0 transition-all duration-200 ${
+                      active ? "text-amber-300" : "text-white/70"
                     }`}
                   />
-                  <span className="font-medium flex-1">{item.title}</span>
+                  <span
+                    className={`font-medium text-sm truncate ${
+                      active ? "text-amber-100" : "text-white/85"
+                    }`}
+                  >
+                    {item.title}
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           );
         })}
       </SidebarMenu>
-    </>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu,
   SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
-import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard ,Home,UserCircle} from "lucide-react";
+import { QrCode, KeyRound, Settings, FileText, LogOut, History, CreditCard, Home, UserCircle } from "lucide-react";
 import { swalSuccess } from "@/lib/swal";
 import logoUrl from "@/assets/panme-logo.jpg";
 import { AdminSidebarSection } from "@/components/admin/AdminSidebar";
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/_authenticated")({
   },
   component: AuthedLayout,
 });
+
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Profile", url: "/profile", icon: UserCircle },
@@ -32,7 +33,6 @@ const items = [
   { title: "Subscription", url: "/subscription", icon: CreditCard },
   { title: "API Keys", url: "/api-keys", icon: KeyRound },
   { title: "Settings", url: "/settings", icon: Settings },
-  
 ];
 
 function AdminSidebarGroup() {
@@ -83,21 +83,21 @@ function AppSidebar() {
         ["--sidebar-border" as any]: "rgba(255,255,255,0.1)",
         ["--sidebar-ring" as any]: "rgba(255,255,255,0.3)",
       }}
-      className="border-r border-white/10 text-white"
+      className="border-r border-white/10 text-white bg-[#0d4a3a]"
     >
-      <SidebarHeader className="px-4 py-5 border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shadow-lg overflow-hidden">
-            <img src={logoUrl} alt="AutoUPI" className="w-7 h-7 object-contain" />
+      <SidebarHeader className="px-3 py-4 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
+            <img src={logoUrl} alt="AutoUPI" className="w-6 h-6 object-contain" />
           </div>
-          <div className="group-data-[collapsible=icon]:hidden">
-            <div className="font-bold text-base leading-tight">AutoUPI</div>
-            <div className="text-[11px] text-white/60">Payment Gateway</div>
+          <div className="group-data-[collapsible=icon]:hidden min-w-0">
+            <div className="font-bold text-sm leading-tight truncate">AutoUPI</div>
+            <div className="text-[10px] text-white/60 truncate">Payment Gateway</div>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
+      <SidebarContent className="px-2 py-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
@@ -108,11 +108,15 @@ function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
-                      className={`group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1 hover:shadow-md ${active ? "bg-white/20 shadow-inner" : ""}`}
+                      className={`group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 ${active ? "bg-white/20 shadow-inner" : ""}`}
                     >
-                      <Link to={item.url}>
-                        <item.icon className={`w-4 h-4 transition-transform duration-300 group-hover/btn:scale-110 ${active ? "text-white" : "text-white/80"}`} />
-                        <span className="font-medium flex-1">{item.title}</span>
+                      <Link to={item.url} className="flex items-center gap-3">
+                        <item.icon
+                          className={`w-5 h-5 shrink-0 transition-transform duration-300 group-hover/btn:scale-110 ${
+                            active ? "text-white" : "text-white/80"
+                          }`}
+                        />
+                        <span className="font-medium text-sm truncate">{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -123,11 +127,11 @@ function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   tooltip="Docs"
-                  className="group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15 hover:translate-x-1"
+                  className="group/btn h-10 rounded-lg transition-all duration-300 hover:bg-white/15"
                 >
-                  <a href="/docs" target="_blank" rel="noopener">
-                    <FileText className="w-4 h-4 text-white/80 transition-transform duration-300 group-hover/btn:scale-110" />
-                    <span className="font-medium">Docs</span>
+                  <a href="/docs" target="_blank" rel="noopener" className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 shrink-0 text-white/80 transition-transform duration-300 group-hover/btn:scale-110" />
+                    <span className="font-medium text-sm">Docs</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -136,15 +140,18 @@ function AppSidebar() {
         </SidebarGroup>
 
         <AdminSidebarGroup />
-
       </SidebarContent>
 
       <SidebarFooter className="p-2 border-t border-white/10">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={logout} tooltip="Sign out" className="h-10 rounded-lg hover:bg-red-500/30 transition-all duration-300">
-              <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
+            <SidebarMenuButton
+              onClick={logout}
+              tooltip="Sign out"
+              className="h-10 rounded-lg hover:bg-red-500/30 transition-all duration-300"
+            >
+              <LogOut className="w-5 h-5 shrink-0" />
+              <span className="text-sm">Sign out</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -158,11 +165,11 @@ function AuthedLayout() {
     <SidebarProvider>
       <div className="flex w-full min-h-screen bg-gradient-to-br from-[#e8f5ee] via-[#dfeee5] to-[#cfe3d5]">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center px-4 border-b border-black/5 bg-white/60 backdrop-blur-sm">
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="h-14 flex items-center px-3 sm:px-4 border-b border-black/5 bg-white/60 backdrop-blur-sm shrink-0">
             <SidebarTrigger className="text-[#0d4a3a]" />
           </header>
-          <main className="flex-1 p-6 md:p-10">
+          <main className="flex-1 p-3 sm:p-6 md:p-10">
             <Outlet />
           </main>
         </div>

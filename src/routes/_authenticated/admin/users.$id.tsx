@@ -331,37 +331,39 @@ function UserDetailPage() {
     .reduce((sum, s) => sum + Number(s.amount), 0);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6">
+      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-4 sm:p-6">
         <Link
           to="/admin/users"
-          className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3"
+          className="inline-flex items-center gap-1 text-white/80 hover:text-white text-xs sm:text-sm mb-2 sm:mb-3"
         >
           <ArrowLeft className="w-4 h-4" /> Back to users
         </Link>
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-white/15 flex items-center justify-center">
-            <UserIcon className="w-7 h-7 text-white" />
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+            <UserIcon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-white truncate">
               {user.display_name || "Unnamed User"}
             </h1>
-            <p className="text-sm text-emerald-100/90 mt-0.5">{user.email}</p>
+            <p className="text-xs sm:text-sm text-emerald-100/90 mt-0.5 truncate">
+              {user.email}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
         <StatBox title="Total Orders" value={orders.length} icon={ShoppingCart} color="blue" />
         <StatCard title="Order Revenue" value={`₹${totalRevenue.toLocaleString("en-IN")}`} icon={DollarSign} color="emerald" />
-        <StatCard title="Subscriptions Spent" value={`₹${totalSubsSpent.toLocaleString("en-IN")}`} icon={TrendingUp} color="purple" />
+        <StatCard title="Subs Spent" value={`₹${totalSubsSpent.toLocaleString("en-IN")}`} icon={TrendingUp} color="purple" />
       </div>
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
         <InfoCard title="Basic Info" icon={UserIcon}>
           <Row label="Email" value={user.email ?? "—"} />
           <Row label="Display Name" value={user.display_name ?? "—"} />
@@ -393,34 +395,34 @@ function UserDetailPage() {
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8">
-        <h2 className="text-xl font-bold text-[#0d1b2a] mb-6 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-4 sm:p-8">
+        <h2 className="text-lg sm:text-xl font-bold text-[#0d1b2a] mb-4 sm:mb-6 flex items-center gap-2">
           <ShoppingCart className="w-5 h-5 text-[#0d4a3a]" /> Recent Orders
         </h2>
         {orders.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">No orders yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[500px]">
               <thead className="border-b border-gray-100">
                 <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  <th className="pb-3">Order ID</th>
-                  <th className="pb-3">Amount</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Date</th>
+                  <th className="px-3 sm:px-0 pb-3">Order ID</th>
+                  <th className="px-3 sm:px-0 pb-3">Amount</th>
+                  <th className="px-3 sm:px-0 pb-3">Status</th>
+                  <th className="px-3 sm:px-0 pb-3">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {orders.map((o) => (
                   <tr key={o.order_id} className="text-sm">
-                    <td className="py-3 font-mono text-xs text-gray-600">
+                    <td className="px-3 sm:px-0 py-3 font-mono text-xs text-gray-600">
                       {o.merchant_order_id || o.order_id}
                     </td>
-                    <td className="py-3 font-semibold text-[#0d1b2a]">
+                    <td className="px-3 sm:px-0 py-3 font-semibold text-[#0d1b2a]">
                       ₹{Number(o.payable_amount).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3"><StatusBadge status={o.status} /></td>
-                    <td className="py-3 text-xs text-gray-500">
+                    <td className="px-3 sm:px-0 py-3"><StatusBadge status={o.status} /></td>
+                    <td className="px-3 sm:px-0 py-3 text-xs text-gray-500">
                       {new Date(o.created_at).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short",
@@ -435,36 +437,36 @@ function UserDetailPage() {
       </div>
 
       {/* Subscription History */}
-      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8">
-        <h2 className="text-xl font-bold text-[#0d1b2a] mb-6 flex items-center gap-2">
+      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-4 sm:p-8">
+        <h2 className="text-lg sm:text-xl font-bold text-[#0d1b2a] mb-4 sm:mb-6 flex items-center gap-2">
           <History className="w-5 h-5 text-[#0d4a3a]" /> Subscription History
         </h2>
         {subs.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">No subscriptions yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[500px]">
               <thead className="border-b border-gray-100">
                 <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  <th className="pb-3">Plan</th>
-                  <th className="pb-3">Amount</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Started</th>
-                  <th className="pb-3">Expires</th>
+                  <th className="px-3 sm:px-0 pb-3">Plan</th>
+                  <th className="px-3 sm:px-0 pb-3">Amount</th>
+                  <th className="px-3 sm:px-0 pb-3">Status</th>
+                  <th className="px-3 sm:px-0 pb-3">Started</th>
+                  <th className="px-3 sm:px-0 pb-3">Expires</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {subs.map((s) => (
                   <tr key={s.id} className="text-sm">
-                    <td className="py-3"><PlanBadge plan={s.plan} /></td>
-                    <td className="py-3 font-semibold text-[#0d1b2a]">
+                    <td className="px-3 sm:px-0 py-3"><PlanBadge plan={s.plan} /></td>
+                    <td className="px-3 sm:px-0 py-3 font-semibold text-[#0d1b2a]">
                       ₹{Number(s.amount).toLocaleString("en-IN")}
                     </td>
-                    <td className="py-3"><StatusBadge status={s.payment_status} /></td>
-                    <td className="py-3 text-xs text-gray-500">
+                    <td className="px-3 sm:px-0 py-3"><StatusBadge status={s.payment_status} /></td>
+                    <td className="px-3 sm:px-0 py-3 text-xs text-gray-500">
                       {s.started_at ? new Date(s.started_at).toLocaleDateString("en-IN") : "—"}
                     </td>
-                    <td className="py-3 text-xs text-gray-500">
+                    <td className="px-3 sm:px-0 py-3 text-xs text-gray-500">
                       {s.expires_at ? new Date(s.expires_at).toLocaleDateString("en-IN") : "—"}
                     </td>
                   </tr>
@@ -476,36 +478,36 @@ function UserDetailPage() {
       </div>
 
       {/* Admin Controls */}
-      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8 space-y-6">
-        <h2 className="text-xl font-bold text-[#0d1b2a]">Admin Controls</h2>
+      <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-4 sm:p-8 space-y-4 sm:space-y-6">
+        <h2 className="text-lg sm:text-xl font-bold text-[#0d1b2a]">Admin Controls</h2>
 
         <div>
           <label className="block text-sm font-semibold text-[#0d1b2a] mb-1.5">Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none bg-white"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none bg-white text-sm"
           >
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-lg border border-gray-200">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {isVerified ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
             ) : (
-              <XCircle className="w-5 h-5 text-gray-400" />
+              <XCircle className="w-5 h-5 text-gray-400 shrink-0" />
             )}
-            <div>
-              <div className="font-medium text-[#0d1b2a]">Verified User</div>
+            <div className="min-w-0">
+              <div className="font-medium text-[#0d1b2a] text-sm">Verified User</div>
               <div className="text-xs text-gray-500">
                 Verified users get a badge and higher trust
               </div>
             </div>
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
             <input
               type="checkbox"
               checked={isVerified}
@@ -523,7 +525,7 @@ function UserDetailPage() {
           <select
             value={plan}
             onChange={(e) => setPlan(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none bg-white"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none bg-white text-sm"
           >
             <option value="">No Plan (Free)</option>
             <option value="basic">Basic — ₹99 / 30 days</option>
@@ -540,25 +542,25 @@ function UserDetailPage() {
             type="date"
             value={expiresAt}
             onChange={(e) => setExpiresAt(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none"
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none text-sm"
           />
         </div>
 
         <button
           onClick={saveChanges}
           disabled={saving}
-          className="w-full py-3.5 rounded-lg bg-[#0d4a3a] hover:bg-[#0a3d30] text-white font-bold transition disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3.5 rounded-lg bg-[#0d4a3a] hover:bg-[#0a3d30] text-white font-bold transition disabled:opacity-60 flex items-center justify-center gap-2 text-sm"
         >
           <Save className="w-4 h-4" />
           {saving ? "Saving..." : "SAVE CHANGES"}
         </button>
 
         {/* Account Security */}
-        <div className="pt-6 border-t border-gray-200 space-y-4">
+        <div className="pt-4 sm:pt-6 border-t border-gray-200 space-y-4">
           <h3 className="text-sm font-bold text-[#0d1b2a]">Account Security</h3>
 
           {/* Direct Password Change */}
-          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 space-y-3">
+          <div className="p-3 sm:p-4 rounded-lg bg-emerald-50 border border-emerald-200 space-y-3">
             <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
               <KeyRound className="w-4 h-4" />
               Direct Password Change (No Email)
@@ -566,7 +568,7 @@ function UserDetailPage() {
             <p className="text-xs text-emerald-700">
               Set a new password immediately. User will be able to login with it right away.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
                 <input
                   type={showNewPass ? "text" : "password"}
@@ -589,13 +591,13 @@ function UserDetailPage() {
                 disabled={changingPass || newPassword.length < 8}
                 className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-60 whitespace-nowrap"
               >
-                {changingPass ? "Changing..." : "Change Password"}
+                {changingPass ? "Changing..." : "Change"}
               </button>
             </div>
           </div>
 
           {/* Subscription Reminder */}
-          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-3">
+          <div className="p-3 sm:p-4 rounded-lg bg-amber-50 border border-amber-200 space-y-3">
             <div className="flex items-center gap-2 text-amber-800 font-semibold text-sm">
               <Bell className="w-4 h-4" />
               Send Subscription Reminder
@@ -609,25 +611,44 @@ function UserDetailPage() {
                 disabled={sendingReminder !== null || !user?.email}
                 className="flex-1 px-3 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs transition disabled:opacity-60"
               >
-                {sendingReminder === "expiring" ? "Sending..." : "Expiring Reminder"}
+                {sendingReminder === "expiring" ? "Sending..." : "Expiring"}
               </button>
               <button
                 onClick={() => sendSubscriptionReminder("expired")}
                 disabled={sendingReminder !== null || !user?.email}
                 className="flex-1 px-3 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs transition disabled:opacity-60"
               >
-                {sendingReminder === "expired" ? "Sending..." : "Expired Reminder"}
+                {sendingReminder === "expired" ? "Sending..." : "Expired"}
               </button>
             </div>
+          </div>
+
+          {/* Password Reset Email */}
+          <div className="p-3 sm:p-4 rounded-lg bg-blue-50 border border-blue-200 space-y-3">
+            <div className="flex items-center gap-2 text-blue-800 font-semibold text-sm">
+              <Mail className="w-4 h-4" />
+              Send Password Reset Email
+            </div>
+            <p className="text-xs text-blue-700">
+              User will receive an email with a link to set a new password.
+            </p>
+            <button
+              onClick={handlePasswordReset}
+              disabled={resetting}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              <KeyRound className="w-4 h-4" />
+              {resetting ? "Sending..." : "Send Reset Email"}
+            </button>
           </div>
         </div>
 
         {/* Danger Zone */}
-        <div className="pt-6 border-t border-gray-200">
+        <div className="pt-4 sm:pt-6 border-t border-gray-200">
           <h3 className="text-sm font-bold text-red-600 mb-3">Danger Zone</h3>
           <button
             onClick={deleteUser}
-            className="px-4 py-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-sm transition flex items-center gap-2"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-sm transition flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" /> Delete User
           </button>
@@ -645,12 +666,12 @@ function StatBox({ title, value, icon: Icon, color }: { title: string; value: st
     purple: "from-purple-500 to-purple-600",
   };
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-6">
-      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md mb-4`}>
-        <Icon className="w-6 h-6 text-white" />
+    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-4 sm:p-6">
+      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md mb-3 sm:mb-4`}>
+        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
       </div>
-      <div className="text-2xl font-bold text-[#0d1b2a]">{value}</div>
-      <div className="text-sm text-gray-500 mt-1">{title}</div>
+      <div className="text-xl sm:text-2xl font-bold text-[#0d1b2a]">{value}</div>
+      <div className="text-xs sm:text-sm text-gray-500 mt-1">{title}</div>
     </div>
   );
 }
@@ -659,8 +680,8 @@ const StatCard = StatBox;
 
 function InfoCard({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-6">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-4 sm:p-6">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
         <div className="w-9 h-9 rounded-lg bg-[#0d4a3a]/10 flex items-center justify-center">
           <Icon className="w-4 h-4 text-[#0d4a3a]" />
         </div>
@@ -674,8 +695,8 @@ function InfoCard({ title, icon: Icon, children }: { title: string; icon: any; c
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-3 text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className={`text-[#0d1b2a] font-medium text-right ${mono ? "font-mono text-xs" : ""}`}>
+      <span className="text-gray-500 shrink-0">{label}</span>
+      <span className={`text-[#0d1b2a] font-medium text-right truncate ${mono ? "font-mono text-xs" : ""}`}>
         {value}
       </span>
     </div>
@@ -691,7 +712,7 @@ function StatusBadge({ status }: { status: string }) {
     cancelled: "bg-gray-100 text-gray-700 border-gray-200",
   };
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colors[status] ?? colors.pending}`}>
+    <span className={`inline-flex items-center px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold border whitespace-nowrap ${colors[status] ?? colors.pending}`}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -704,7 +725,7 @@ function PlanBadge({ plan }: { plan: string }) {
     yearly: "bg-emerald-100 text-emerald-800 border-emerald-200",
   };
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colors[plan] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+    <span className={`inline-flex items-center px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-semibold border whitespace-nowrap ${colors[plan] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
       {plan.toUpperCase()}
     </span>
   );

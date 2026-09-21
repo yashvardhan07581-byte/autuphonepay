@@ -40,19 +40,16 @@ function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        // Total users
         const { count: totalUsers } = await supabase
           .from("profiles")
           .select("*", { count: "exact", head: true });
 
-        // Active subscriptions
         const { count: activeSubs } = await supabase
           .from("subscriptions")
           .select("*", { count: "exact", head: true })
           .eq("payment_status", "paid")
           .gte("expires_at", new Date().toISOString());
 
-        // Total revenue (paid subscriptions sum)
         const { data: paidSubs } = await supabase
           .from("subscriptions")
           .select("amount")
@@ -63,7 +60,6 @@ function AdminDashboard() {
           0
         );
 
-        // Today signups
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const { count: todaySignups } = await supabase
@@ -87,16 +83,18 @@ function AdminDashboard() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-white" />
+      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-4 sm:p-6 flex items-center justify-between">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Admin Dashboard</h1>
-            <p className="text-sm text-emerald-100/90 flex items-center gap-1.5 mt-0.5">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-white truncate">
+              Admin Dashboard
+            </h1>
+            <p className="text-xs sm:text-sm text-emerald-100/90 flex items-center gap-1.5 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 inline-block" />
               Overview of your platform
             </p>
@@ -111,7 +109,7 @@ function AdminDashboard() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             <StatCard
               title="Total Users"
               value={stats?.totalUsers ?? 0}
@@ -125,13 +123,13 @@ function AdminDashboard() {
               color="green"
             />
             <StatCard
-              title="Active Subscriptions"
+              title="Active Subs"
               value={stats?.activeSubscriptions ?? 0}
               icon={TrendingUp}
               color="purple"
             />
             <StatCard
-              title="Today's Signups"
+              title="Today Signups"
               value={stats?.todaySignups ?? 0}
               icon={UserPlus}
               color="orange"
@@ -139,9 +137,11 @@ function AdminDashboard() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-8">
-            <h2 className="text-xl font-bold text-[#0d1b2a] mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-5 sm:p-8">
+            <h2 className="text-lg sm:text-xl font-bold text-[#0d1b2a] mb-4 sm:mb-6">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <QuickAction
                 title="Manage Users"
                 description="View, add, or remove users"
@@ -184,17 +184,17 @@ function StatCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-6 hover:shadow-xl transition-shadow">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white rounded-2xl shadow-lg border border-black/5 p-3 sm:p-6 hover:shadow-xl transition-shadow">
+      <div className="flex items-center justify-between mb-2 sm:mb-4">
         <div
-          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md`}
+          className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${colors[color]} flex items-center justify-center shadow-md`}
         >
-          <Icon className="w-6 h-6 text-white" />
+          <Icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
         </div>
-        <ArrowUpRight className="w-5 h-5 text-gray-300" />
+        <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-300" />
       </div>
-      <div className="text-2xl font-bold text-[#0d1b2a]">{value}</div>
-      <div className="text-sm text-gray-500 mt-1">{title}</div>
+      <div className="text-lg sm:text-2xl font-bold text-[#0d1b2a]">{value}</div>
+      <div className="text-[11px] sm:text-sm text-gray-500 mt-1">{title}</div>
     </div>
   );
 }
@@ -211,12 +211,12 @@ function QuickAction({
   return (
     <a
       href={href}
-      className="block p-5 rounded-xl border border-gray-200 hover:border-[#0d4a3a] hover:bg-[#0d4a3a]/5 transition-all group"
+      className="block p-4 sm:p-5 rounded-xl border border-gray-200 hover:border-[#0d4a3a] hover:bg-[#0d4a3a]/5 transition-all group"
     >
-      <div className="font-semibold text-[#0d1b2a] group-hover:text-[#0d4a3a]">
+      <div className="font-semibold text-sm sm:text-base text-[#0d1b2a] group-hover:text-[#0d4a3a]">
         {title}
       </div>
-      <div className="text-sm text-gray-500 mt-1">{description}</div>
+      <div className="text-xs sm:text-sm text-gray-500 mt-1">{description}</div>
     </a>
   );
 }
