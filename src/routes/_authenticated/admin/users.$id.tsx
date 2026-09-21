@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin/users/$id")({
     if (!user) throw redirect({ to: "/auth" });
     const { data: profile } = await supabase
       .from("profiles").select("role").eq("id", user.id).single();
-    if (profile?.role !== "admin") throw redirect({ to: "/generate" });
+    if (profile?.role !== "admin") throw redirect({ to: "/dashboard" });
     return { user };
   },
   component: UserDetailPage,
@@ -205,7 +205,7 @@ function UserDetailPage() {
       await sendReset({
         data: {
           user_id: user.id,
-          redirect_to: `${window.location.origin}/auth`,
+          redirect_to: `${window.location.origin}/reset-password`,
         },
       });
       swalSuccess("Password reset email sent");
@@ -217,8 +217,8 @@ function UserDetailPage() {
   }
 
   async function handleDirectPasswordChange() {
-    if (newPassword.length < 8) {
-      return toast.error("Password must be at least 8 characters");
+    if (!newPassword) {
+      return toast.error("Please enter a password");
     }
 
     const confirm = await Swal.fire({
@@ -574,9 +574,8 @@ function UserDetailPage() {
                   type={showNewPass ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="New password (min 8 chars)"
+                  placeholder="Enter new password"
                   className="w-full px-4 py-2.5 pr-11 rounded-lg border border-emerald-300 focus:border-emerald-500 outline-none text-sm bg-white"
-                  minLength={8}
                 />
                 <button
                   type="button"
@@ -588,7 +587,7 @@ function UserDetailPage() {
               </div>
               <button
                 onClick={handleDirectPasswordChange}
-                disabled={changingPass || newPassword.length < 8}
+                disabled={changingPass || !newPassword}
                 className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-60 whitespace-nowrap"
               >
                 {changingPass ? "Changing..." : "Change"}

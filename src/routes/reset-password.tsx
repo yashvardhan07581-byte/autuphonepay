@@ -28,14 +28,10 @@ function ResetPasswordPage() {
   const [validSession, setValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if user came from a password reset email (has valid session)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      // User needs to be authenticated via the reset link
-      // Supabase creates a temporary session when they click the email link
       if (session) {
         setValidSession(true);
       } else {
-        // Check for hash params (legacy)
         const hash = window.location.hash;
         if (hash && hash.includes("access_token")) {
           setValidSession(true);
@@ -45,18 +41,11 @@ function ResetPasswordPage() {
     });
   }, []);
 
-  const passwordStrength = () => {
-    if (password.length < 6) return { label: "Too short", color: "bg-red-500", width: "20%" };
-    if (password.length < 8) return { label: "Weak", color: "bg-orange-500", width: "40%" };
-    if (password.length < 12) return { label: "Good", color: "bg-yellow-500", width: "70%" };
-    return { label: "Strong", color: "bg-emerald-500", width: "100%" };
-  };
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (password.length < 6) {
-      return toast.error("Password must be at least 6 characters");
+    if (!password) {
+      return toast.error("Please enter a password");
     }
     if (password !== confirmPassword) {
       return toast.error("Passwords do not match");
@@ -68,8 +57,7 @@ function ResetPasswordPage() {
       if (error) throw error;
 
       await swalSuccess("Password updated successfully!");
-      
-      // Redirect to dashboard
+
       setTimeout(() => {
         navigate({ to: "/dashboard" });
       }, 1500);
@@ -80,9 +68,6 @@ function ResetPasswordPage() {
     }
   }
 
-  const strength = passwordStrength();
-
-  // Loading state
   if (checking) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-[#e8f5ee] via-[#dfeee5] to-[#cfe3d5] flex items-center justify-center p-6">
@@ -94,7 +79,6 @@ function ResetPasswordPage() {
     );
   }
 
-  // Invalid session
   if (!validSession) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-[#e8f5ee] via-[#dfeee5] to-[#cfe3d5] flex items-center justify-center p-5 sm:p-6">
@@ -124,7 +108,6 @@ function ResetPasswordPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#e8f5ee] via-[#dfeee5] to-[#cfe3d5] flex items-center justify-center p-5 sm:p-6">
       <div className="w-full max-w-md">
-        {/* Mobile/Desktop header */}
         <div className="flex items-center justify-center gap-3 mb-6">
           <img
             src={logoUrl}
@@ -137,7 +120,6 @@ function ResetPasswordPage() {
           </div>
         </div>
 
-        {/* Form card */}
         <div className="bg-white rounded-2xl shadow-xl border border-black/5 p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="text-center">
@@ -148,7 +130,7 @@ function ResetPasswordPage() {
                 Set New Password
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                Choose a strong password for your account
+                Enter your new password
               </p>
             </div>
 
@@ -162,10 +144,9 @@ function ResetPasswordPage() {
                 <input
                   type={showPass ? "text" : "password"}
                   required
-                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 6 characters"
+                  placeholder="Enter password"
                   className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 focus:border-[#0d4a3a] focus:ring-2 focus:ring-[#0d4a3a]/15 outline-none text-sm transition bg-white"
                 />
                 <button
@@ -176,23 +157,6 @@ function ResetPasswordPage() {
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-
-              {/* Password strength */}
-              {password.length > 0 && (
-                <div className="mt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${strength.color} transition-all duration-300`}
-                        style={{ width: strength.width }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium text-gray-600 w-16 text-right">
-                      {strength.label}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Confirm Password */}
@@ -205,10 +169,9 @@ function ResetPasswordPage() {
                 <input
                   type={showConfirm ? "text" : "password"}
                   required
-                  minLength={6}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter new password"
+                  placeholder="Re-enter password"
                   className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 focus:border-[#0d4a3a] focus:ring-2 focus:ring-[#0d4a3a]/15 outline-none text-sm transition bg-white"
                 />
                 <button
@@ -220,7 +183,6 @@ function ResetPasswordPage() {
                 </button>
               </div>
 
-              {/* Match indicator */}
               {confirmPassword.length > 0 && (
                 <div className="mt-2 flex items-center gap-1.5">
                   {password === confirmPassword ? (
@@ -238,10 +200,9 @@ function ResetPasswordPage() {
               )}
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
-              disabled={loading || password !== confirmPassword || password.length < 6}
+              disabled={loading || !password || password !== confirmPassword}
               className="w-full py-3.5 rounded-xl bg-[#0d4a3a] hover:bg-[#0a3d30] text-white font-bold tracking-wide transition disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-[#0d4a3a]/20"
             >
               {loading ? (
@@ -255,7 +216,6 @@ function ResetPasswordPage() {
               )}
             </button>
 
-            {/* Back to login */}
             <p className="text-center text-sm text-gray-600">
               Remember your password?{" "}
               <Link to="/auth" className="font-bold text-[#0d4a3a] hover:underline">
