@@ -27,18 +27,44 @@ function ResetPasswordPage() {
   const [checking, setChecking] = useState(true);
   const [validSession, setValidSession] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setValidSession(true);
-      } else {
-        const hash = window.location.hash;
-        if (hash && hash.includes("access_token")) {
-          setValidSession(true);
+   useEffect(() => {
+    let alive = true;
+
+    async function init() {
+      // If hash has access_token (from email link), wait for Supabase to process it
+      const hash = window.location.hash;
+      const hasHashToken = hash && hash.includes("access_token");
+
+      if (hasHashToken) {
+        // Wait for Supabase to process the hash and create a session
+        // Check every 200ms, up to 5 seconds
+        for (let i = 0; i < 25; i++) {
+          await new Promise((r) => setTimeout(r, 200));
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            if (!alive) return;
+            setValidSession(true);
+            setChecking(false);
+            return;
+          }
         }
+        // Timeout — hash was there but session never created
+        if (alive) {
+          setValidSession(false);
+          setChecking(false);
+        }
+        return;
       }
+
+      // No hash — check existing session (direct visit)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!alive) return;
+      setValidSession(!!session);
       setChecking(false);
-    });
+    }
+
+    init();
+    return () => { alive = false; };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
