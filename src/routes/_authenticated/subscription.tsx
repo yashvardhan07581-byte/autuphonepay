@@ -33,12 +33,12 @@ const PLANS: Plan[] = [
   {
     id: "basic",
     name: "Basic",
-    price: 99,
+    price: 199,
     days: 30,
     icon: Zap,
     color: "blue",
     features: [
-      "1,000 payment orders/month",
+  
       "Basic webhook support",
       "Email notifications",
       "Standard support",
@@ -53,7 +53,7 @@ const PLANS: Plan[] = [
     color: "purple",
     popular: true,
     features: [
-      "10,000 payment orders/month",
+     
       "Priority webhook delivery",
       "Custom domain support",
       "Email + Chat support",
@@ -63,12 +63,12 @@ const PLANS: Plan[] = [
   {
     id: "yearly",
     name: "Yearly",
-    price: 999,
-    days: 200,
+    price: 1599,
+    days: 365,
     icon: Crown,
     color: "emerald",
     features: [
-      "Unlimited payment orders",
+     
       "Priority webhook delivery",
       "Custom domain support",
       "24/7 Priority support",
