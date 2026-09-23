@@ -4,9 +4,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PLANS = {
-  basic: { price: 99, days: 30 },
+  basic: { price: 199, days: 30 },
   pro: { price: 299, days: 60 },
-  yearly: { price: 999, days: 200 },
+  yearly: { price: 1599, days: 365 },
 } as const;
 
 const CreateOrderSchema = z.object({
