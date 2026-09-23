@@ -528,9 +528,9 @@ function UserDetailPage() {
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#0d4a3a] outline-none bg-white text-sm"
           >
             <option value="">No Plan (Free)</option>
-            <option value="basic">Basic — ₹99 / 30 days</option>
+            <option value="basic">Basic — ₹199 / 30 days</option>
             <option value="pro">Pro — ₹299 / 60 days</option>
-            <option value="yearly">Yearly — ₹999 / 200 days</option>
+            <option value="yearly">Yearly — ₹1599 / 365 days</option>
           </select>
         </div>
 
