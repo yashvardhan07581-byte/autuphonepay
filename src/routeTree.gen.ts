@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminUsersIdRouteImport } from './routes/_authenticated/admin/users.$id'
 import { Route as ApiPublicCronSendRemindersRouteImport } from './routes/api/public/cron/send-reminders'
 import { Route as ApiPublicPayOrderIdRouteImport } from './routes/api/public/pay.$orderId'
+import { Route as ApiPublicPayCancelRouteImport } from './routes/api/public/pay.cancel'
 import { Route as ApiPublicPaymentsPollRouteImport } from './routes/api/public/payments/poll'
 import { Route as ApiPublicSubscriptionWebhookRouteImport } from './routes/api/public/subscription/webhook'
 import { Route as ApiPublicV1OrdersRouteImport } from './routes/api/public/v1/orders'
@@ -170,6 +171,11 @@ const ApiPublicPayOrderIdRoute = ApiPublicPayOrderIdRouteImport.update({
   path: '/api/public/pay/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPayCancelRoute = ApiPublicPayCancelRouteImport.update({
+  id: '/api/public/pay/cancel',
+  path: '/api/public/pay/cancel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsPollRoute = ApiPublicPaymentsPollRouteImport.update({
   id: '/api/public/payments/poll',
   path: '/api/public/payments/poll',
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
+  '/api/public/pay/cancel': typeof ApiPublicPayCancelRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
@@ -253,6 +260,7 @@ export interface FileRoutesByTo {
   '/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
+  '/api/public/pay/cancel': typeof ApiPublicPayCancelRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users/$id': typeof AuthenticatedAdminUsersIdRoute
   '/api/public/cron/send-reminders': typeof ApiPublicCronSendRemindersRoute
   '/api/public/pay/$orderId': typeof ApiPublicPayOrderIdRoute
+  '/api/public/pay/cancel': typeof ApiPublicPayCancelRoute
   '/api/public/payments/poll': typeof ApiPublicPaymentsPollRoute
   '/api/public/subscription/webhook': typeof ApiPublicSubscriptionWebhookRoute
   '/api/public/v1/orders': typeof ApiPublicV1OrdersRouteWithChildren
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
+    | '/api/public/pay/cancel'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
@@ -350,6 +360,7 @@ export interface FileRouteTypes {
     | '/admin/users/$id'
     | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
+    | '/api/public/pay/cancel'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users/$id'
     | '/api/public/cron/send-reminders'
     | '/api/public/pay/$orderId'
+    | '/api/public/pay/cancel'
     | '/api/public/payments/poll'
     | '/api/public/subscription/webhook'
     | '/api/public/v1/orders'
@@ -403,6 +415,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicCronSendRemindersRoute: typeof ApiPublicCronSendRemindersRoute
   ApiPublicPayOrderIdRoute: typeof ApiPublicPayOrderIdRoute
+  ApiPublicPayCancelRoute: typeof ApiPublicPayCancelRoute
   ApiPublicPaymentsPollRoute: typeof ApiPublicPaymentsPollRoute
   ApiPublicSubscriptionWebhookRoute: typeof ApiPublicSubscriptionWebhookRoute
   ApiPublicV1OrdersRoute: typeof ApiPublicV1OrdersRouteWithChildren
@@ -586,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPayOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/pay/cancel': {
+      id: '/api/public/pay/cancel'
+      path: '/api/public/pay/cancel'
+      fullPath: '/api/public/pay/cancel'
+      preLoaderRoute: typeof ApiPublicPayCancelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/poll': {
       id: '/api/public/payments/poll'
       path: '/api/public/payments/poll'
@@ -683,6 +703,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicCronSendRemindersRoute: ApiPublicCronSendRemindersRoute,
   ApiPublicPayOrderIdRoute: ApiPublicPayOrderIdRoute,
+  ApiPublicPayCancelRoute: ApiPublicPayCancelRoute,
   ApiPublicPaymentsPollRoute: ApiPublicPaymentsPollRoute,
   ApiPublicSubscriptionWebhookRoute: ApiPublicSubscriptionWebhookRoute,
   ApiPublicV1OrdersRoute: ApiPublicV1OrdersRouteWithChildren,

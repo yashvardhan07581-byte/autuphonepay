@@ -5,7 +5,13 @@ import { createHmac, timingSafeEqual } from "crypto";
 const PLANS: Record<string, { days: number }> = {
   basic: { days: 30 },
   pro: { days: 60 },
-  yearly: { days: 200 },
+  yearly: { days: 365 },
+};
+
+const PLAN_RANK: Record<string, number> = {
+  basic: 1,
+  pro: 2,
+  yearly: 3,
 };
 
 export const Route = createFileRoute("/api/public/subscription/webhook")({
@@ -18,7 +24,6 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
           { auth: { persistSession: false } }
         );
 
-        // Load webhook secret
         const { data: settings } = await supabase
           .from("admin_settings")
           .select("gateway_webhook_secret")
@@ -39,7 +44,6 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
           return new Response("Bad signature", { status: 401 });
         }
 
-        // Reject older than 5 min
         if (Math.abs(Date.now() / 1000 - Number(t)) > 300) {
           return new Response("Stale", { status: 400 });
         }
@@ -59,14 +63,12 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
         if (event.event === "payment.success") {
           const orderId = event.order_id;
 
-          // Find pending subscription
           const { data: sub } = await supabase
             .from("subscriptions")
             .select("id, user_id, plan, duration_days, payment_status")
             .eq("payment_order_id", orderId)
             .maybeSingle();
 
-          // Idempotency: already processed
           if (!sub || sub.payment_status === "paid") {
             return new Response("ok", { status: 200 });
           }
@@ -76,11 +78,39 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
             return new Response("Unknown plan", { status: 400 });
           }
 
+          // ============ GET CURRENT PROFILE ============
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_plan, subscription_status, subscription_expires_at")
+            .eq("id", sub.user_id)
+            .single();
+
           const now = new Date();
-          const expiresAt = new Date(now);
+
+          // ============ PLAN RANK COMPARISON ============
+          const currentPlan = profile?.subscription_plan ?? null;
+          const currentRank = currentPlan ? PLAN_RANK[currentPlan] ?? 0 : 0;
+          const newRank = PLAN_RANK[sub.plan] ?? 0;
+
+          // ============ CARRY OVER REMAINING DAYS ============
+          // Sirf upgrade/renew pe — downgrade pe fresh start
+          let baseDate = now;
+
+          if (
+            profile?.subscription_status === "active" &&
+            profile?.subscription_expires_at &&
+            newRank >= currentRank
+          ) {
+            const existingExpiry = new Date(profile.subscription_expires_at);
+            if (existingExpiry > now) {
+              baseDate = existingExpiry;
+            }
+          }
+
+          const expiresAt = new Date(baseDate);
           expiresAt.setDate(expiresAt.getDate() + planInfo.days);
 
-          // Update subscription record
+          // ============ UPDATE SUBSCRIPTION ============
           await supabase
             .from("subscriptions")
             .update({
@@ -91,7 +121,7 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
             })
             .eq("id", sub.id);
 
-          // Update user profile
+          // ============ UPDATE PROFILE ============
           await supabase
             .from("profiles")
             .update({
@@ -102,11 +132,15 @@ export const Route = createFileRoute("/api/public/subscription/webhook")({
               is_verified: true,
             })
             .eq("id", sub.user_id);
-        } else if (event.event === "payment.failed" || event.event === "payment.expired") {
+        } else if (
+          event.event === "payment.failed" ||
+          event.event === "payment.expired"
+        ) {
           await supabase
             .from("subscriptions")
             .update({
-              payment_status: event.event === "payment.expired" ? "cancelled" : "failed",
+              payment_status:
+                event.event === "payment.expired" ? "cancelled" : "failed",
               updated_at: new Date().toISOString(),
             })
             .eq("payment_order_id", event.order_id);

@@ -11,6 +11,7 @@ import { swalSuccess } from "@/lib/swal";
 import {
   CreditCard, Check, Sparkles, Loader2, Crown, Zap, Rocket,
   AlertCircle, X, Copy, QrCode, RefreshCw, ExternalLink,
+  TrendingUp, Calendar, Clock, ArrowUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/subscription")({
@@ -63,8 +64,8 @@ const PLANS: Plan[] = [
   {
     id: "yearly",
     name: "Yearly",
-    price: 999,
-    days: 200,
+    price: 1599,
+    days: 365,
     icon: Crown,
     color: "emerald",
     features: [
@@ -92,6 +93,13 @@ type OrderData = {
   upi_uri: string;
   qr_base64: string | null;
   expires_at: string;
+};
+
+// ============ PLAN ORDER FOR COMPARISON ============
+const PLAN_RANK: Record<string, number> = {
+  basic: 1,
+  pro: 2,
+  yearly: 3,
 };
 
 function SubscriptionPage() {
@@ -165,114 +173,236 @@ function SubscriptionPage() {
       )
     : 0;
 
+  // Total days of current plan
+  const currentPlanData = PLANS.find((p) => p.id === profile?.subscription_plan);
+  const totalDays = currentPlanData?.days ?? 30;
+  const progressPercent = isActive
+    ? Math.min(100, Math.max(0, (daysLeft / totalDays) * 100))
+    : 0;
+
+  const isExpiringSoon = isActive && daysLeft <= 7;
+
+  const currentRank = profile?.subscription_plan
+    ? PLAN_RANK[profile.subscription_plan] ?? 0
+    : 0;
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-6 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center">
-            <CreditCard className="w-6 h-6 text-white" />
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      {/* ============ HEADER ============ */}
+      <div className="rounded-2xl bg-gradient-to-r from-[#0d4a3a] to-[#1b6e54] shadow-xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+            <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">Subscription</h1>
-            <p className="text-sm text-emerald-100/90 mt-0.5">
-              Choose a plan that fits your business
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold text-white truncate">
+              Subscription
+            </h1>
+            <p className="text-xs sm:text-sm text-emerald-100/90 mt-0.5">
+              Manage your plan & billing
             </p>
           </div>
         </div>
         <button
           onClick={syncPending}
           disabled={syncing}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-sm transition backdrop-blur-sm disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-semibold text-xs sm:text-sm transition backdrop-blur-sm disabled:opacity-60 w-full sm:w-auto justify-center"
         >
           <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
           {syncing ? "Checking..." : "Verify Pending"}
         </button>
       </div>
 
-      {/* Current status */}
+      {/* ============ CURRENT SUBSCRIPTION CARD ============ */}
       {!loading && profile && (
         <div
-          className={`rounded-2xl shadow-lg border p-6 ${
+          className={`rounded-2xl shadow-xl border-2 overflow-hidden ${
             isActive
-              ? "bg-gradient-to-r from-emerald-50 to-emerald-100/50 border-emerald-200"
-              : "bg-gradient-to-r from-gray-50 to-gray-100/50 border-gray-200"
+              ? isExpiringSoon
+                ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+                : "bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200"
+              : "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200"
           }`}
         >
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  isActive ? "bg-emerald-500" : "bg-gray-400"
-                }`}
-              >
+          {/* Card header */}
+          <div
+            className={`px-5 sm:px-6 py-4 flex items-center justify-between ${
+              isActive
+                ? isExpiringSoon
+                  ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                  : "bg-gradient-to-r from-emerald-500 to-teal-600"
+                : "bg-gradient-to-r from-gray-400 to-gray-500"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 {isActive ? (
-                  <Check className="w-6 h-6 text-white" />
+                  currentPlanData?.icon ? (
+                    <currentPlanData.icon className="w-5 h-5 text-white" />
+                  ) : (
+                    <Check className="w-5 h-5 text-white" />
+                  )
                 ) : (
-                  <AlertCircle className="w-6 h-6 text-white" />
+                  <AlertCircle className="w-5 h-5 text-white" />
                 )}
               </div>
               <div>
-                <div className="text-sm text-gray-600">Current Plan</div>
-                <div className="text-xl font-bold text-[#0d1b2a]">
+                <div className="text-xs text-white/80 uppercase tracking-wider font-semibold">
+                  Current Plan
+                </div>
+                <div className="text-lg sm:text-xl font-bold text-white">
                   {isActive && profile.subscription_plan
                     ? profile.subscription_plan.toUpperCase()
                     : "No Active Plan"}
                 </div>
               </div>
             </div>
-
-            {isActive ? (
-              <div className="flex items-center gap-6">
-                <div>
-                  <div className="text-xs text-gray-600">Days Left</div>
-                  <div className="text-2xl font-bold text-emerald-600">{daysLeft}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600">Expires</div>
-                  <div className="text-sm font-semibold text-[#0d1b2a]">
-                    {profile.subscription_expires_at
-                      ? new Date(profile.subscription_expires_at).toLocaleDateString(
-                          "en-IN",
-                          { day: "numeric", month: "short", year: "numeric" }
-                        )
-                      : "—"}
-                  </div>
+            {isActive && (
+              <div className="text-right">
+                <div className="text-xs text-white/80">Days Left</div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-white tabular-nums">
+                  {daysLeft}
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* Card body */}
+          <div className="p-5 sm:p-6">
+            {isActive ? (
+              <>
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
+                  <div className="bg-white rounded-xl p-3 border border-black/5">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Started
+                    </div>
+                    <div className="text-sm font-bold text-[#0d1b2a]">
+                      {profile.subscription_started_at
+                        ? new Date(profile.subscription_started_at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—"}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 border border-black/5">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      Expires
+                    </div>
+                    <div className="text-sm font-bold text-[#0d1b2a]">
+                      {profile.subscription_expires_at
+                        ? new Date(profile.subscription_expires_at).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—"}
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 border border-black/5 col-span-2 sm:col-span-1">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      Progress
+                    </div>
+                    <div className="text-sm font-bold text-[#0d1b2a]">
+                      {Math.round(progressPercent)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+                    <span>Time remaining</span>
+                    <span>
+                      {daysLeft} / {totalDays} days
+                    </span>
+                  </div>
+                  <div className="h-2.5 bg-white rounded-full overflow-hidden border border-black/5">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        isExpiringSoon
+                          ? "bg-gradient-to-r from-amber-400 to-orange-500"
+                          : "bg-gradient-to-r from-emerald-400 to-teal-600"
+                      }`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Expiring soon warning */}
+                {isExpiringSoon && (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-white border border-amber-200">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-800">
+                      <strong>Expiring soon!</strong> Your plan expires in {daysLeft}{" "}
+                      {daysLeft === 1 ? "day" : "days"}. Renew now to avoid interruption.
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="text-sm text-gray-500">
-                Buy a plan to unlock all features
+              <div className="text-center py-4">
+                <div className="text-sm text-gray-600 mb-1">
+                  No active subscription
+                </div>
+                <div className="text-xs text-gray-500">
+                  Choose a plan below to unlock all features
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {PLANS.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={plan}
-            currentPlan={profile?.subscription_plan ?? null}
-            isActive={!!isActive}
-            buying={buying === plan.id}
-            onBuy={() => buyPlan(plan)}
-          />
-        ))}
+      {/* ============ PLANS GRID ============ */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-[#0d1b2a]">
+              {isActive ? "Upgrade / Renew Your Plan" : "Choose Your Plan"}
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+              {isActive
+                ? "Remaining days will be added to your new plan"
+                : "Get started with a subscription"}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+          {PLANS.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              currentPlan={profile?.subscription_plan ?? null}
+              currentRank={currentRank}
+              isActive={!!isActive}
+              daysLeft={daysLeft}
+              buying={buying === plan.id}
+              onBuy={() => buyPlan(plan)}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Footer note */}
-      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6">
-        <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+      {/* ============ INFO NOTE ============ */}
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 sm:p-6">
+        <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
           <Sparkles className="w-4 h-4" />
           How subscription works
         </h3>
-        <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+        <ul className="text-xs sm:text-sm text-blue-800 space-y-1 list-disc list-inside">
           <li>Payment via UPI (PhonePe / GPay / Paytm) — instant activation</li>
+          <li>
+            <strong>Upgrade anytime</strong> — remaining days will be added to your new
+            plan
+          </li>
           <li>Plan automatically activates after payment confirmation</li>
-          <li>You can upgrade or renew anytime</li>
           <li>Subscription expires automatically after the plan duration</li>
         </ul>
       </div>
@@ -296,17 +426,25 @@ function SubscriptionPage() {
 function PlanCard({
   plan,
   currentPlan,
+  currentRank,
   isActive,
+  daysLeft,
   buying,
   onBuy,
 }: {
   plan: Plan;
   currentPlan: string | null;
+  currentRank: number;
   isActive: boolean;
+  daysLeft: number;
   buying: boolean;
   onBuy: () => void;
 }) {
   const Icon = plan.icon;
+  const planRank = PLAN_RANK[plan.id] ?? 0;
+  const isCurrent = currentPlan === plan.id && isActive;
+  const isUpgrade = isActive && planRank > currentRank;
+  const isDowngrade = isActive && planRank < currentRank;
 
   const colorMap: any = {
     blue: {
@@ -330,70 +468,114 @@ function PlanCard({
   };
 
   const colors = colorMap[plan.color];
-  const isCurrent = currentPlan === plan.id && isActive;
 
   return (
     <div
       className={`relative bg-white rounded-2xl shadow-xl border-2 ${
         plan.popular ? colors.border : "border-gray-100"
-      } p-6 flex flex-col transition-transform hover:-translate-y-1 hover:shadow-2xl`}
+      } p-5 sm:p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-2xl`}
     >
+      {/* Popular badge */}
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold shadow-lg">
-            <Sparkles className="w-3 h-3" /> MOST POPULAR
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] sm:text-xs font-bold shadow-lg">
+            <Sparkles className="w-3 h-3" /> POPULAR
           </span>
         </div>
       )}
 
+      {/* Current badge */}
       {isCurrent && (
         <div className="absolute top-4 right-4">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold border border-emerald-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] sm:text-xs font-bold border border-emerald-200">
             <Check className="w-3 h-3" /> CURRENT
           </span>
         </div>
       )}
 
-      <div className={`w-14 h-14 rounded-2xl ${colors.bg} flex items-center justify-center shadow-lg mb-4`}>
-        <Icon className="w-7 h-7 text-white" />
+      {/* Upgrade/Downgrade badge */}
+      {isUpgrade && !isCurrent && (
+        <div className="absolute top-4 right-4">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-bold border border-blue-200">
+            <ArrowUp className="w-3 h-3" /> UPGRADE
+          </span>
+        </div>
+      )}
+      {isDowngrade && (
+        <div className="absolute top-4 right-4">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] sm:text-xs font-bold border border-gray-200">
+            DOWNGRADE
+          </span>
+        </div>
+      )}
+
+      {/* Icon */}
+      <div
+        className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${colors.bg} flex items-center justify-center shadow-lg mb-4`}
+      >
+        <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
       </div>
 
-      <h3 className="text-xl font-bold text-[#0d1b2a]">{plan.name}</h3>
-      <p className="text-sm text-gray-500 mt-1">For {plan.days} days</p>
+      {/* Name */}
+      <h3 className="text-lg sm:text-xl font-bold text-[#0d1b2a]">{plan.name}</h3>
+      <p className="text-xs sm:text-sm text-gray-500 mt-1">
+        {plan.days} days validity
+      </p>
 
-      <div className="mt-4 mb-6">
-        <span className="text-4xl font-extrabold text-[#0d1b2a]">₹{plan.price}</span>
-        <span className="text-gray-500 text-sm ml-1">/ {plan.days} days</span>
+      {/* Price */}
+      <div className="mt-4 mb-5">
+        <span className="text-3xl sm:text-4xl font-extrabold text-[#0d1b2a]">
+          ₹{plan.price}
+        </span>
+        <span className="text-gray-500 text-xs sm:text-sm ml-1">
+          / {plan.days} days
+        </span>
       </div>
 
-      <ul className="space-y-3 flex-1 mb-6">
+      {/* Features */}
+      <ul className="space-y-2.5 flex-1 mb-5">
         {plan.features.map((f, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
-            <Check className={`w-4 h-4 mt-0.5 shrink-0 ${colors.text}`} />
+          <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-gray-700">
+            <Check className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${colors.text}`} />
             <span>{f}</span>
           </li>
         ))}
       </ul>
 
+      {/* Days info (for upgrade) */}
+      {isUpgrade && daysLeft > 0 && (
+        <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-800">
+          <strong>+{daysLeft} days</strong> will be added from your current plan
+        </div>
+      )}
+
+      {/* Button */}
       <button
         onClick={onBuy}
         disabled={buying || isCurrent}
-        className={`w-full py-3.5 rounded-xl text-white font-bold tracking-wide transition disabled:opacity-60 flex items-center justify-center gap-2 ${
+        className={`w-full py-3 sm:py-3.5 rounded-xl text-white font-bold tracking-wide transition disabled:opacity-60 flex items-center justify-center gap-2 text-xs sm:text-sm ${
           isCurrent ? "bg-gray-400 cursor-not-allowed" : colors.btn
         }`}
       >
         {buying ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" /> Creating order...
+            <Loader2 className="w-4 h-4 animate-spin" /> Creating...
           </>
         ) : isCurrent ? (
           <>
             <Check className="w-4 h-4" /> Current Plan
           </>
+        ) : isUpgrade ? (
+          <>
+            <ArrowUp className="w-4 h-4" /> Upgrade to {plan.name}
+          </>
+        ) : isDowngrade ? (
+          <>
+            <CreditCard className="w-4 h-4" /> Switch to {plan.name}
+          </>
         ) : (
           <>
-            <CreditCard className="w-4 h-4" />
-            {currentPlan ? "Upgrade / Renew" : "Buy Now"}
+            <CreditCard className="w-4 h-4" /> Buy {plan.name}
           </>
         )}
       </button>
@@ -466,12 +648,12 @@ function PaymentModal({
           setPollCount((c) => c + 1);
         }
       } catch {
-        // keep polling on transient errors
+        // keep polling
       }
     }
 
     poll();
-    intervalRef.current = window.setInterval(poll, 1500);
+    intervalRef.current = window.setInterval(poll, 3000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -537,7 +719,9 @@ function PaymentModal({
             <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <Check className="w-10 h-10 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-bold text-[#0d1b2a] mb-2">Payment Successful!</h2>
+            <h2 className="text-2xl font-bold text-[#0d1b2a] mb-2">
+              Payment Successful!
+            </h2>
             <p className="text-sm text-gray-600 mb-1">
               Your <strong>{plan.name}</strong> plan is now active
             </p>

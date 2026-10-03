@@ -16,7 +16,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
 
 export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { display_name?: string; upi_id?: string; payee_name?: string }) =>
+  .validator((d: { display_name?: string; upi_id?: string; payee_name?: string }) =>
     z.object({
       display_name: z.string().trim().max(80).optional(),
       upi_id: z.string().trim().max(80).optional(),
@@ -134,7 +134,7 @@ export const addMyDomain = createServerFn({ method: "POST" })
 
 
 
-  .inputValidator((d: { domain: string }) => z.object({ domain: z.string().min(3).max(253) }).parse(d))
+  .validator((d: { domain: string }) => z.object({ domain: z.string().min(3).max(253) }).parse(d))
   .handler(async ({ data, context }) => {
     const domain = normalizeDomain(data.domain);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -153,7 +153,7 @@ export const addMyDomain = createServerFn({ method: "POST" })
 
 export const deleteMyDomain = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("merchant_domains").delete().eq("id", data.id);

@@ -114,7 +114,7 @@ function UserDashboard() {
       : profile?.subscription_plan === "pro"
         ? 60
         : profile?.subscription_plan === "yearly"
-          ? 200
+          ? 365
           : 30;
 
   const progressPercent = isActive

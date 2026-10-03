@@ -357,7 +357,7 @@ function LandingPage() {
               <h3 className="text-xl sm:text-2xl font-bold text-white">Basic</h3>
               <p className="text-sm text-white/60 mt-1">Perfect for starters</p>
               <div className="mt-5 mb-6">
-                <span className="text-4xl font-extrabold text-white">₹99</span>
+                <span className="text-4xl font-extrabold text-white">₹199</span>
                 <span className="text-white/60 text-sm ml-1">/ 30 days</span>
               </div>
               <ul className="space-y-3 flex-1 mb-6">
@@ -428,7 +428,7 @@ function LandingPage() {
               <p className="text-sm text-white/60 mt-1">Best value for money</p>
               <div className="mt-5 mb-6">
                 <span className="text-4xl font-extrabold text-white">₹999</span>
-                <span className="text-white/60 text-sm ml-1">/ 200 days</span>
+                <span className="text-white/60 text-sm ml-1">/ 365 days</span>
               </div>
               <ul className="space-y-3 flex-1 mb-6">
                 {[

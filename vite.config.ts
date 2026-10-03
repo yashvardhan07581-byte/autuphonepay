@@ -23,8 +23,11 @@ if (key) clientEnv["import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY"] = JSON.strin
 export default defineConfig({
   vite: { define: clientEnv },
   tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (SSR error wrapper).
     server: { entry: "server" },
+    // Disable CSRF warning (since createCsrfMiddleware not available in this version)
+    serverFns: {
+      disableCsrfMiddlewareWarning: true,
+    },
   },
   ...(isVercel ? { nitro: { preset: "vercel" } } : {}),
 });

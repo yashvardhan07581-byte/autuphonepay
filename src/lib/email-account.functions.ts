@@ -38,7 +38,7 @@ export const getMyEmailAccount = createServerFn({ method: "GET" })
 
 export const connectMyEmailAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { email: string; app_password: string }) =>
+  .validator((d: { email: string; app_password: string }) =>
     z.object({
       email: z.string().trim().email(),
       app_password: z.string().min(8).max(128),

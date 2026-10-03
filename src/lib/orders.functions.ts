@@ -12,7 +12,7 @@ function gen10DigitId() {
 
 export const createOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { amount: number }) =>
+  .validator((d: { amount: number }) =>
     z.object({ amount: z.number().positive().max(1000000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
