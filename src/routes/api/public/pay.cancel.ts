@@ -8,7 +8,6 @@ export const Route = createFileRoute("/api/public/pay/cancel")({
         try {
           const body = await request.json().catch(() => ({}));
           const orderId = String(body?.order_id ?? "").trim();
-          const apiKey = String(body?.api_key ?? "").trim();
 
           if (!orderId) {
             return Response.json(
@@ -17,7 +16,6 @@ export const Route = createFileRoute("/api/public/pay/cancel")({
             );
           }
 
-          // Public origin for merchant API key check
           const supabase = createClient(
             process.env.SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -62,7 +60,7 @@ export const Route = createFileRoute("/api/public/pay/cancel")({
               failed_at: new Date().toISOString(),
             })
             .eq("order_id", orderId)
-            .eq("status", "pending"); // ← Only if still pending
+            .eq("status", "pending");
 
           if (updErr) {
             return Response.json(
@@ -109,8 +107,4 @@ export const Route = createFileRoute("/api/public/pay/cancel")({
         }),
     },
   },
-
 });
-
-});
- 5a6b89aa528289c1c0a002c197d1c6ede05251d0
